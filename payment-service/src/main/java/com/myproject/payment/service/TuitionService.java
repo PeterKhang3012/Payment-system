@@ -13,6 +13,7 @@ public class TuitionService {
         this.tuitionRepository = tuitionRepository;
     }
 
+    //search for tuition by studentID
     public Tuition getTuitionByStudentId(String studentId) {
         return tuitionRepository.findByStudentId(studentId)
         .orElseThrow(() -> new RuntimeException("Tuition not found for student ID: " + studentId));
