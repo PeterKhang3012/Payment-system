@@ -1,7 +1,8 @@
 package com.myproject.payment.controller;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,7 +19,8 @@ public class WalletController {
     }
 
     @GetMapping("/{userId}")
-    public Wallet getWalletByUserId(@PathVariable String userId) {
+    public Wallet getWalletByUserId(@AuthenticationPrincipal Jwt jwt) {
+        String userId = jwt.getClaimAsString("userId");
         return walletService.getWalletByUserId(userId);
     }
 }

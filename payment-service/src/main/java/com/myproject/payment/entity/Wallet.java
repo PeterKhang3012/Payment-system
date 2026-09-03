@@ -17,7 +17,7 @@ public class Wallet {
     private Long id;
 
     @Column(name = "user_id", nullable = false)
-    private Long userId;
+    private String userId;
 
     @Column( nullable = false)
     private BigDecimal balance = BigDecimal.ZERO;
@@ -29,7 +29,7 @@ public class Wallet {
         return id;
     }
 
-    public Long getUserId() {
+    public String getUserId() {
         return userId;
     }
 
@@ -41,7 +41,7 @@ public class Wallet {
         this.id = id;
     }
 
-    public void setUserId(Long userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 

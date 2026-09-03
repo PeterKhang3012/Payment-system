@@ -11,9 +11,11 @@ import jakarta.transaction.Transactional;
 public class PaymentService {
     private final TuitionService tuitionService;
     private final WalletService walletService;
-    public PaymentService(TuitionService tuitionService, WalletService walletService) {
+    private final PaymentTransactionService paymentTransactionService;
+    public PaymentService(TuitionService tuitionService, WalletService walletService, PaymentTransactionService paymentTransactionService) {
         this.tuitionService = tuitionService;
         this.walletService = walletService;
+        this.paymentTransactionService = paymentTransactionService;
     }
 
     @Transactional
@@ -39,5 +41,8 @@ public class PaymentService {
         //Handling the payment process by deducting the tuition amount from the wallet balance and updating the tuition status to "PAID"
         wallet.setBalance(wallet.getBalance().subtract(tuition.getAmount()));
         tuition.setStatus("PAID");
+
+        //Creating a payment transaction record for the payment
+        paymentTransactionService.createPaymentTransaction(userId, tuition, tuition.getAmount());
     }
 }
