@@ -20,7 +20,7 @@ public class PaymentTransactionController {
         this.paymentTransactionService = paymentTransactionService;
     }
 
-    @GetMapping("/history/{userId}")
+    @GetMapping("/history")
     public List<PaymentTransaction> getHistoryList(@AuthenticationPrincipal Jwt jwt) {
         String userId = jwt.getClaimAsString("userId");
         return paymentTransactionService.getPaymentTransactionsByUserId(userId);
