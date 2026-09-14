@@ -18,7 +18,7 @@ public class WalletController {
         this.walletService = walletService;
     }
 
-    @GetMapping("/{userId}")
+    @GetMapping("/")
     public Wallet getWalletByUserId(@AuthenticationPrincipal Jwt jwt) {
         String userId = jwt.getClaimAsString("userId");
         return walletService.getWalletByUserId(userId);

@@ -1,6 +1,7 @@
 package com.myproject.payment.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -8,7 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.myproject.payment.entity.PaymentTransaction;
+import com.myproject.payment.dto.PaymentTransactionResponse;
 import com.myproject.payment.service.PaymentTransactionService;
 
 @RestController
@@ -21,8 +22,16 @@ public class PaymentTransactionController {
     }
 
     @GetMapping("/history")
-    public List<PaymentTransaction> getHistoryList(@AuthenticationPrincipal Jwt jwt) {
+    public List<PaymentTransactionResponse> getHistoryList(@AuthenticationPrincipal Jwt jwt) {
         String userId = jwt.getClaimAsString("userId");
-        return paymentTransactionService.getPaymentTransactionsByUserId(userId);
+        return paymentTransactionService.getPaymentTransactionsByUserId(userId).stream()
+                .map(transaction -> new PaymentTransactionResponse(
+                        transaction.getId(),
+                        transaction.getTuition().getStudentId(),
+                        transaction.getAmount(),
+                        transaction.getStatus(),
+                        transaction.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
     }
 }
