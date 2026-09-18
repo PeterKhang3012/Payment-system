@@ -11,7 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "wallet")
+@Table(name = "Balance")
 public class Balance {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
