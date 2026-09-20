@@ -1,0 +1,88 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: otp-service
+
+  datasource:
+    # Tạo DB trước: CREATE DATABASE otp_service_db CHARACTER SET utf8mb4;
+    url: jdbc:mysql://localhost:3306/otp_service_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=UTF-8
+    username: root
+    password: 
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+
+  # ─────────────────────────────────────────
+  # SMTP Mail — Gmail mặc định
+  # Gmail: bật 2FA → tạo App Password tại
+  #   https://myaccount.google.com/apppasswords
+  # Có thể override bằng biến môi trường:
+  #   MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD
+  # ─────────────────────────────────────────
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:your-gmail@gmail.com}
+    password: ${MAIL_PASSWORD:xxxx xxxx xxxx xxxx}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+# ─────────────────────────────────────────
+# OTP Settings
+# ─────────────────────────────────────────
+otp:
+  expiry-minutes: 5          # Thời gian hiệu lực OTP (phút)
+  max-attempts: 5            # Số lần nhập sai tối đa trước khi OTP bị khóa
+  email:
+    from-name: "Hệ Thống Thanh Toán Học Phí"
+    subject-prefix: "[Thanh Toán Học Phí] Mã OTP xác thực"
+
+# ─────────────────────────────────────────
+# Internal Service Token
+# payment-service phải gửi đúng token này
+# trong header X-Internal-Service-Token
+# ─────────────────────────────────────────
+internal:
+  service-token: ps-internal-service-token-2025
+
+# ─────────────────────────────────────────
+# Swagger / OpenAPI
+# UI: http://localhost:8083/swagger-ui.html
+# ─────────────────────────────────────────
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
+logging:
+  level:
+    com.paymentsystem.otpservice: DEBUG
+    org.hibernate.SQL: DEBUG

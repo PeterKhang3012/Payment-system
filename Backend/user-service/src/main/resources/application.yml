@@ -1,0 +1,63 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: user-service
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/user_service_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=UTF-8
+    username: root
+    password: 
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:db/schema.sql
+
+# ─────────────────────────────────────────
+# JWT Configuration
+# secret: Base64-encoded key (≥ 256 bits)
+# expiration: ms → 86400000 = 24 giờ
+# ─────────────────────────────────────────
+jwt:
+  secret: dGhpcyBpcyBhIHZlcnkgbG9uZyBzZWNyZXQga2V5IGZvciBqd3QgaGFzaCBzaWduaW5nIDIwMjU=
+  expiration: 86400000
+
+# ─────────────────────────────────────────
+# Internal Service Token
+# payment-service gửi header này khi gọi
+# PATCH /api/tuitions/{id}/status
+# ─────────────────────────────────────────
+internal:
+  service-token: ps-internal-service-token-2025
+
+# ─────────────────────────────────────────
+# Swagger / OpenAPI
+# UI: http://localhost:8081/swagger-ui.html
+# ─────────────────────────────────────────
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+
+logging:
+  level:
+    com.paymentsystem.userservice: DEBUG
+    org.hibernate.SQL: DEBUG
