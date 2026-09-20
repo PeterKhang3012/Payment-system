@@ -2,6 +2,7 @@ package com.myproject.tuition.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,7 +19,12 @@ public class TuitionController {
     }
 
     @GetMapping("/{studentId}")
-    public Tuition getTuitionByStudentId(@PathVariable String studentId) {
+    public Tuition getTuitionByStudentId(@PathVariable Long studentId) {
         return tuitionService.getTuitionByStudentId(studentId);
+    }
+
+    @PutMapping("/{studentId}/paid")
+    public void markTuitionAsPaid(@PathVariable Long studentId) {
+        tuitionService.markTuitionAsPaid(studentId);
     }
 }

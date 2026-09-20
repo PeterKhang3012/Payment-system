@@ -13,5 +13,5 @@ import jakarta.persistence.LockModeType;
 public interface TuitionRepository extends JpaRepository<Tuition, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT t FROM Tuition t WHERE t.studentId = :studentId")
-    Optional<Tuition> findByStudentIdForUpdate(String studentId);
+    Optional<Tuition> findByStudentIdForUpdate(Long studentId);
 }
