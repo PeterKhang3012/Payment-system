@@ -1,9 +1,11 @@
 package com.myproject.payment.client;
 
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 import com.myproject.payment.dto.TuitionResponse;
+import com.myproject.payment.exception.TuitionNotFoundException;
 
 @Component
 public class TuitionClient {
@@ -16,11 +18,17 @@ public class TuitionClient {
     }
 
     public TuitionResponse getTuitionByStudentId(Long studentId, String authorization) {
-        return restClient.get()
-                .uri("/{studentId}", studentId)
-                .header("Authorization", authorization)
-                .retrieve()
-                .body(TuitionResponse.class);
+        try{
+            return restClient.get()
+                    .uri("/{studentId}", studentId)
+                    .header("Authorization", authorization)
+                    .retrieve()
+                    .body(TuitionResponse.class);
+        }catch(HttpClientErrorException.NotFound e){
+             throw new TuitionNotFoundException(
+                    "Tuition not found for student ID: " + studentId
+            );
+        }
     }
 
     public void markTuitionAsPaid(Long studentId, String authorization) {

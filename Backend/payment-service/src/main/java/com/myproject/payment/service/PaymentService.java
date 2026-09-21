@@ -5,7 +5,9 @@ import org.springframework.stereotype.Service;
 import com.myproject.payment.client.BalanceClient;
 import com.myproject.payment.client.TuitionClient;
 import com.myproject.payment.dto.BalanceResponse;
+import com.myproject.payment.dto.DeductBalanceResponse;
 import com.myproject.payment.dto.TuitionResponse;
+import com.myproject.payment.exception.*;
 
 import jakarta.transaction.Transactional;
 
@@ -25,23 +27,33 @@ public class PaymentService {
     @Transactional
     public void payTuition(String userId, Long studentId, boolean acceptedTerms, String authorization) {
         if (!acceptedTerms) {
-            throw new IllegalArgumentException("Terms and conditions must be accepted.");
+            throw new TermsNotAcceptedException("Terms and conditions must be accepted.");
         }
 
         TuitionResponse tuitionResponse = tuitionClient.getTuitionByStudentId(studentId, authorization);
-        BalanceResponse balanceResponse = balanceClient.getBalance(authorization);
-        
-        if(balanceResponse.getBalance().compareTo(tuitionResponse.getAmount()) < 0) {
-            throw new IllegalArgumentException("Insufficient balance to pay tuition.");
+
+        if (tuitionResponse.getStatus().equalsIgnoreCase("PAID")) {
+            throw new TuitionAlreadyPaidException("Tuition has aldready paid");
         }
 
-        balanceClient.deductBalance(tuitionResponse.getAmount(), authorization);
+        BalanceResponse balanceResponse = balanceClient.getBalance(authorization);
+
+        if (balanceResponse.getBalance().compareTo(tuitionResponse.getAmount()) < 0) {
+            throw new InsufficientBalanceException("Insufficient balance to pay tuition.");
+        }
+
+        DeductBalanceResponse deductBalance = balanceClient.deductBalance(tuitionResponse.getAmount(), authorization);
+
+        // Dừng giao dịch nếu trừ tiền thất bại
+        if (!deductBalance.isSuccess()) {
+            throw new PaymentFailedException("Payment failed");
+        }
 
         tuitionClient.markTuitionAsPaid(studentId, authorization);
 
-        
         System.out.println("Tuition ID = " + tuitionResponse.getTuitionId());
         System.out.println("Tuition amount = " + tuitionResponse.getAmount());
-        paymentTransactionService.createPaymentTransaction(userId, tuitionResponse.getTuitionId(), tuitionResponse.getAmount());
+        paymentTransactionService.createPaymentTransaction(userId, tuitionResponse.getTuitionId(),
+                tuitionResponse.getAmount());
     }
 }
