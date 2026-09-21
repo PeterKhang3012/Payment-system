@@ -27,7 +27,7 @@ public class PaymentTransactionController {
         return paymentTransactionService.getPaymentTransactionsByUserId(userId).stream()
                 .map(transaction -> new PaymentTransactionResponse(
                         transaction.getId(),
-                        transaction.getTuition().getStudentId(),
+                        transaction.getTuitionId(),
                         transaction.getAmount(),
                         transaction.getStatus(),
                         transaction.getCreatedAt()

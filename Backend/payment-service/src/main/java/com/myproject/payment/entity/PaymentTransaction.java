@@ -8,8 +8,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 
@@ -23,9 +21,8 @@ public class PaymentTransaction {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
-    @ManyToOne
-    @JoinColumn(name = "tuition_id", nullable = false)
-    private Tuition tuition;
+    @Column(name = "tuition_id", nullable = false)
+    private Long tuitionId;
 
     @Column(nullable = false)
     private BigDecimal amount;
@@ -47,8 +44,8 @@ public class PaymentTransaction {
         return userId;
     }
 
-    public Tuition getTuition() {
-        return tuition;
+    public Long getTuitionId() {
+        return tuitionId;
     }
 
     public BigDecimal getAmount() {
@@ -71,8 +68,8 @@ public class PaymentTransaction {
         this.userId = userId;
     }
 
-    public void setTuition(Tuition tuition) {
-        this.tuition = tuition;
+    public void setTuitionId(Long tuitionId) {
+        this.tuitionId = tuitionId;
     }
 
     public void setAmount(BigDecimal amount) {

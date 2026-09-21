@@ -7,7 +7,6 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.myproject.payment.entity.PaymentTransaction;
-import  com.myproject.payment.entity.Tuition;
 import com.myproject.payment.repository.PaymentTransactionRepository;
 
 @Service
@@ -18,10 +17,10 @@ public class PaymentTransactionService {
         this.paymentTransactionRepository = paymentTransactionRepository;
     }
 
-    public PaymentTransaction createPaymentTransaction(String userId, Tuition tuition, BigDecimal amount) {
+    public PaymentTransaction createPaymentTransaction(String userId, Long tuition, BigDecimal amount) {
         PaymentTransaction paymentTransaction = new PaymentTransaction();
         paymentTransaction.setUserId(userId);
-        paymentTransaction.setTuition(tuition);
+        paymentTransaction.setTuitionId(tuition);
         paymentTransaction.setAmount(amount);
         paymentTransaction.setStatus("PAID");
         paymentTransaction.setCreatedAt(LocalDateTime.now());

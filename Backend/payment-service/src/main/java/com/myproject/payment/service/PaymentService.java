@@ -2,48 +2,46 @@ package com.myproject.payment.service;
 
 import org.springframework.stereotype.Service;
 
-import com.myproject.payment.entity.Tuition;
-import com.myproject.payment.entity.Wallet;
+import com.myproject.payment.client.BalanceClient;
+import com.myproject.payment.client.TuitionClient;
+import com.myproject.payment.dto.BalanceResponse;
+import com.myproject.payment.dto.TuitionResponse;
 
 import jakarta.transaction.Transactional;
 
 @Service
 public class PaymentService {
-    private final TuitionService tuitionService;
-    private final WalletService walletService;
     private final PaymentTransactionService paymentTransactionService;
-    
-    public PaymentService(TuitionService tuitionService, WalletService walletService, PaymentTransactionService paymentTransactionService) {
-        this.tuitionService = tuitionService;
-        this.walletService = walletService;
+    private final TuitionClient tuitionClient;
+    private final BalanceClient balanceClient;
+
+    public PaymentService(PaymentTransactionService paymentTransactionService, TuitionClient tuitionClient,
+            BalanceClient balanceClient) {
         this.paymentTransactionService = paymentTransactionService;
+        this.tuitionClient = tuitionClient;
+        this.balanceClient = balanceClient;
     }
 
     @Transactional
-    public void payTuition(String studentId, String userId, boolean acceptedTerms) {
-        Wallet wallet = walletService.getWalletByUserId(userId);
-        Tuition tuition = tuitionService.getTuitionByStudentId(studentId);
-
-        //Checking that the user has accepted the terms and conditions before proceeding with the payment
+    public void payTuition(String userId, Long studentId, boolean acceptedTerms, String authorization) {
         if (!acceptedTerms) {
-            throw new RuntimeException("You must accept the terms and conditions to proceed with the payment.");
+            throw new IllegalArgumentException("Terms and conditions must be accepted.");
         }
 
-        //checking if the tuition has already been paid
-        if ("PAID".equalsIgnoreCase(tuition.getStatus())) {
-            throw new RuntimeException("Tuition has already been paid for student ID: " + studentId);
+        TuitionResponse tuitionResponse = tuitionClient.getTuitionByStudentId(studentId, authorization);
+        BalanceResponse balanceResponse = balanceClient.getBalance(authorization);
+        
+        if(balanceResponse.getBalance().compareTo(tuitionResponse.getAmount()) < 0) {
+            throw new IllegalArgumentException("Insufficient balance to pay tuition.");
         }
 
-        //checking if the wallet has sufficient balance to cover the tuition amount
-        if (wallet.getBalance().compareTo(tuition.getAmount()) < 0) {
-            throw new RuntimeException("Insufficient balance in wallet for user ID: " + userId);
-        }
+        balanceClient.deductBalance(tuitionResponse.getAmount(), authorization);
 
-        //Handling the payment process by deducting the tuition amount from the wallet balance and updating the tuition status to "PAID"
-        wallet.setBalance(wallet.getBalance().subtract(tuition.getAmount()));
-        tuition.setStatus("PAID");
+        tuitionClient.markTuitionAsPaid(studentId, authorization);
 
-        //Creating a payment transaction record for the payment
-        paymentTransactionService.createPaymentTransaction(userId, tuition, tuition.getAmount());
+        
+        System.out.println("Tuition ID = " + tuitionResponse.getTuitionId());
+        System.out.println("Tuition amount = " + tuitionResponse.getAmount());
+        paymentTransactionService.createPaymentTransaction(userId, tuitionResponse.getTuitionId(), tuitionResponse.getAmount());
     }
 }
