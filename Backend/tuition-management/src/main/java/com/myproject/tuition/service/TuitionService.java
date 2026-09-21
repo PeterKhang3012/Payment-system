@@ -2,6 +2,7 @@ package com.myproject.tuition.service;
 
 import org.springframework.stereotype.Service;
 
+import com.myproject.tuition.dto.TuitionResponse;
 import com.myproject.tuition.entity.Tuition;
 import com.myproject.tuition.repository.TuitionRepository;
 
@@ -17,13 +18,21 @@ public class TuitionService {
     }
 
     //search for tuition by studentID
-    public Tuition getTuitionByStudentId(Long studentId) {
-        return tuitionRepository.findByStudentIdForUpdate(studentId)
+    public TuitionResponse getTuitionByStudentId(Long studentId) {
+        Tuition tuition = tuitionRepository.findByStudentIdForUpdate(studentId)
         .orElseThrow(() -> new RuntimeException("Tuition not found for student ID: " + studentId));
+        return new TuitionResponse(
+            tuition.getId(), 
+            tuition.getStudentId(), 
+            tuition.getStudentName(), 
+            tuition.getStatus(),
+            tuition.getAmount()
+        );
     }
 
     public void markTuitionAsPaid(Long studentId) {
-        Tuition tuition = getTuitionByStudentId(studentId);
+        Tuition tuition = tuitionRepository.findByStudentIdForUpdate(studentId)
+            .orElseThrow(() -> new RuntimeException("Tuition not found for student ID: " + studentId));
         tuition.setStatus("PAID");
         tuitionRepository.save(tuition);
     }

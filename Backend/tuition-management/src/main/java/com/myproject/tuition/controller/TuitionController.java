@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.myproject.tuition.entity.Tuition;
+import com.myproject.tuition.dto.TuitionResponse;
 import com.myproject.tuition.service.TuitionService;
 
 @RestController
@@ -19,7 +19,7 @@ public class TuitionController {
     }
 
     @GetMapping("/{studentId}")
-    public Tuition getTuitionByStudentId(@PathVariable Long studentId) {
+    public TuitionResponse getTuitionByStudentId(@PathVariable Long studentId) {
         return tuitionService.getTuitionByStudentId(studentId);
     }
 
