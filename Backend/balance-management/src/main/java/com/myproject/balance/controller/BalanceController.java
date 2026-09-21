@@ -6,12 +6,12 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.myproject.balance.dto.BalanceResponse;
 import com.myproject.balance.dto.DeductBalanceResponse;
-import com.myproject.balance.entity.Balance;
 import com.myproject.balance.service.BalanceService;
 
 @RestController
@@ -24,13 +24,13 @@ public class BalanceController {
     }
 
     @GetMapping("/me")
-    public Balance getBalanceByUserId(@AuthenticationPrincipal Jwt jwt) {
+    public BalanceResponse getBalanceByUserId(@AuthenticationPrincipal Jwt jwt) {
         String userId = jwt.getClaimAsString("userId");
         return balanceService.getBalanceByUserId(userId);
     }
 
     @PostMapping("/deduct")
-    public DeductBalanceResponse deductBalance(@AuthenticationPrincipal Jwt jwt, @RequestParam BigDecimal amount) {
+    public DeductBalanceResponse deductBalance(@AuthenticationPrincipal Jwt jwt, @RequestBody BigDecimal amount) {
         String userId = jwt.getClaimAsString("userId");
         return balanceService.deductBalance(userId, amount);
     }

@@ -2,12 +2,12 @@ package com.myproject.balance.dto;
 
 import java.math.BigDecimal;
 
-public class BalanceResponse {
+public class DeductBalanceResponse {
     private boolean success;
     private String message;
     private BigDecimal balance;
 
-    public BalanceResponse(boolean success, String message, BigDecimal balance) {
+    public DeductBalanceResponse(boolean success, String message, BigDecimal balance) {
         this.success = success;
         this.message = message;
         this.balance = balance;
