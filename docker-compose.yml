@@ -1,0 +1,59 @@
+services:
+
+  mongodb:
+    image: mongo:8
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - payment-network
+
+  auth-service:
+    build:
+      context: ./Backend/auth-service
+    container_name: auth-service
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./Backend/auth-service/.env
+    depends_on:
+      - mongodb
+    networks:
+      - payment-network
+
+  balance-management:
+    build:
+      context: ./Backend/balance-management
+    container_name: balance-management
+    ports:
+      - "3001:3001"
+    networks:
+      - payment-network
+
+  tuition:
+    build:
+      context: ./Backend/tuition-management
+    container_name: tuition-management
+    ports:
+      - "3002:3002"
+    networks:
+      - payment-network
+
+  payment:
+    build:
+      context: ./Backend/payment-service
+    container_name: payment-service
+    ports:
+      - "8080:8080"
+    networks:
+      - payment-network
+
+volumes:
+  mongo-data:
+
+networks:
+  payment-network:
+    driver: bridge

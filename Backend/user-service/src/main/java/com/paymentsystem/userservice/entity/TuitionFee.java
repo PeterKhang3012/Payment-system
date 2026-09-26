@@ -42,6 +42,8 @@ public class TuitionFee {
     @Column(name = "student_id", nullable = false, length = 20)
     private String studentId;
 
+    //thiếu tên sinh viên
+
     /** Học kỳ — ví dụ: "HK1-2025-2026". */
     @Column(nullable = false, length = 50)
     private String semester;

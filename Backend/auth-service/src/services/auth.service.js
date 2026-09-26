@@ -17,7 +17,7 @@ const login = async (username, password) => {
   }
 
   const token = jwt.sign(
-    { userId: user._id, username: user.username },
+    { userId: user.userId, username: user.username },
     secret,
     { algorithm: "RS256", 
     expiresIn: process.env.JWT_EXPIRES_IN || "1h" },
@@ -26,7 +26,7 @@ const login = async (username, password) => {
   return {
     token,
     user: {
-      userId: user._id,
+      userId: user.userId,
       username: user.username
     },
   };

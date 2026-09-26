@@ -48,7 +48,7 @@ public class User {
 
     @Column(nullable = false, length = 100)
     private String email;
-
+    //thiếu số điện thoại
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

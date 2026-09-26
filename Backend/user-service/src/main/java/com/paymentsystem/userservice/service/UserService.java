@@ -27,7 +27,7 @@ public class UserService {
 
     /** Lấy thông tin sinh viên theo ID — dùng bởi payment-service. */
     @Transactional(readOnly = true)
-    public UserResponse getUserById(Long id) {
+    public UserResponse getUserById(Long id) { //Nên đặt là getStudentById
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new GlobalException.ResourceNotFoundException("User", "id", id));
         return AuthService.toUserResponse(user);
