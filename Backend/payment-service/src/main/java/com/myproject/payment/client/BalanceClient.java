@@ -16,18 +16,18 @@ public class BalanceClient {
 
     public BalanceClient(RestClient.Builder builder) {
         this.restClient = builder
-                .baseUrl("http://localhost:3001/api/balances")
+                .baseUrl("http://balance-management:3001/api/balances")
                 .build();
     }
 
     public BalanceResponse getBalance(String authorization) {
-        try{
+        try {
             return restClient.get()
                     .uri("/me")
                     .header("Authorization", authorization)
                     .retrieve()
                     .body(BalanceResponse.class);
-        }catch(HttpClientErrorException.NotFound e){
+        } catch (HttpClientErrorException.NotFound e) {
             throw new BalanceNotFoundException("Balance not found for current user");
         }
     }

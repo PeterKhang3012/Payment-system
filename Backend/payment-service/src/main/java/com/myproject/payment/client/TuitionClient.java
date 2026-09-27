@@ -13,7 +13,7 @@ public class TuitionClient {
 
     public TuitionClient(RestClient.Builder builder) {
         this.restClient = builder
-                .baseUrl("http://localhost:3002/api/tuitions")
+                .baseUrl("http://tuition-management:3002/api/tuitions")
                 .build();
     }
 
