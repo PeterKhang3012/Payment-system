@@ -17,6 +17,16 @@ public class PaymentTransactionService {
         this.paymentTransactionRepository = paymentTransactionRepository;
     }
 
+    // public PaymentTransaction createPendingTransaction(String userId, Long tuition, BigDecimal amount){
+    //     PaymentTransaction paymentTransaction = new PaymentTransaction();
+    //     paymentTransaction.setUserId(userId);
+    //     paymentTransaction.setTuitionId(tuition);
+    //     paymentTransaction.setAmount(amount);
+    //     paymentTransaction.setStatus("Pending");
+    //     paymentTransaction.setCreatedAt(LocalDateTime.now());
+    //     return paymentTransactionRepository.save(paymentTransaction); 
+    // }
+
     public PaymentTransaction createPaymentTransaction(String userId, Long tuition, BigDecimal amount) {
         PaymentTransaction paymentTransaction = new PaymentTransaction();
         paymentTransaction.setUserId(userId);

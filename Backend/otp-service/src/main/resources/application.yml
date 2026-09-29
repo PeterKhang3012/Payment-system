@@ -9,7 +9,7 @@ spring:
     # Tạo DB trước: CREATE DATABASE otp_service_db CHARACTER SET utf8mb4;
     url: jdbc:mysql://localhost:3306/otp_service_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh&characterEncoding=UTF-8
     username: root
-    password: 
+    password: Khang-5v5
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 10
@@ -40,8 +40,8 @@ spring:
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
-    username: ${MAIL_USERNAME:your-gmail@gmail.com}
-    password: ${MAIL_PASSWORD:xxxx xxxx xxxx xxxx}
+    username: ${MAIL_USERNAME:your-email@gmail.com}
+    password: ${MAIL_PASSWORD:xxxx xxxx xxxx xxx} #Thay bằng mật khẩu 16 ký tự, lấy trong google app password
     properties:
       mail:
         smtp:
