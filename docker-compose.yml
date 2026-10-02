@@ -12,6 +12,25 @@ services:
     networks:
       - payment-network
 
+  otp-mysql:
+    image: mysql:8
+    container_name: otp-mysql
+    ports:
+     - "3307:3306"
+    environment:
+      MYSQL_DATABASE: otp_service_db
+      MYSQL_ROOT_PASSWORD: ${OTP_DB_PASSWORD}
+    volumes:
+      - otp-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${OTP_DB_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - payment-network
+
   redis:
       image: redis:8
       container_name: payment-redis
@@ -39,6 +58,29 @@ services:
     container_name: balance-management
     ports:
       - "3001:3001"
+    environment:
+      SQLSERVER_USERNAME: ${SQLSERVER_USERNAME}
+      SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
+    networks:
+      - payment-network
+  
+  otp-service:
+    build: ./Backend/otp-service
+    container_name: otp-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://otp-mysql:3306/otp_service_db
+      SPRING_DATASOURCE_USERNAME: ${OTP_DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${OTP_DB_PASSWORD}
+
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
+    depends_on:
+      otp-mysql:
+        condition: service_healthy
     networks:
       - payment-network
 
@@ -48,6 +90,9 @@ services:
     container_name: tuition-management
     ports:
       - "3002:3002"
+    environment:
+      SQLSERVER_USERNAME: ${SQLSERVER_USERNAME}
+      SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
     networks:
       - payment-network
 
@@ -57,6 +102,9 @@ services:
     container_name: payment-service
     ports:
       - "8080:8080"
+    environment:
+      SQLSERVER_USERNAME: ${SQLSERVER_USERNAME}
+      SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
     depends_on:
       - redis
     networks:
@@ -64,6 +112,7 @@ services:
 
 volumes:
     mongo-data:
+    otp-mysql-data:
 networks:
   payment-network:
     driver: bridge

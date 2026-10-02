@@ -13,7 +13,7 @@ public class OtpClient {
 
     private final RestClient restClient;
 
-    private static final String OTP_SERVICE_URL = "http://host.docker.internal:8083";
+    private static final String OTP_SERVICE_URL = "http://otp-service:8083";
     private static final String INTERNAL_SERVICE_TOKEN =
             "ps-internal-service-token-2025";
 
