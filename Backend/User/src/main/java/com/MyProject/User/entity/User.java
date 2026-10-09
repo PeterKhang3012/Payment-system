@@ -1,4 +1,4 @@
-package com.paymentsystem.userservice.entity;
+package com.MyProject.User.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

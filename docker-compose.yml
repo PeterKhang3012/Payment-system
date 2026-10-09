@@ -31,6 +31,28 @@ services:
     networks:
       - payment-network
 
+  
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: payment-sqlserver
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${SQLSERVER_PASSWORD}
+    ports:
+      - "1434:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql 
+    networks:
+      - payment-network
+    healthcheck:
+        test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -Q "SELECT 1" || exit 1
+        interval: 10s
+        timeout: 5s
+        retries: 10
+        start_period: 30s
+
   redis:
       image: redis:8
       container_name: payment-redis
@@ -61,6 +83,9 @@ services:
     environment:
       SQLSERVER_USERNAME: ${SQLSERVER_USERNAME}
       SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
     networks:
       - payment-network
   
@@ -93,6 +118,9 @@ services:
     environment:
       SQLSERVER_USERNAME: ${SQLSERVER_USERNAME}
       SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
     networks:
       - payment-network
 
@@ -106,13 +134,33 @@ services:
       SQLSERVER_USERNAME: ${SQLSERVER_USERNAME}
       SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
     depends_on:
-      - redis
+      redis:
+        condition: service_started
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - payment-network
+
+  user-service:
+    build:
+      context: ./Backend/User
+    container_name: user-service
+    ports:
+      - "3006:3006"
+    environment:
+      SQLSERVER_USERNAME: ${SQLSERVER_USERNAME}
+      SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: on-failure
     networks:
       - payment-network
 
 volumes:
     mongo-data:
     otp-mysql-data:
+    sqlserver-data:
 networks:
   payment-network:
     driver: bridge

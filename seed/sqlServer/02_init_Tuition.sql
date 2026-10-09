@@ -1,6 +1,7 @@
 sql
 -- Tuition seed data
 -- SQL Server
+Use TuitionDB;
 
 INSERT INTO tuition
     (student_id, student_name, amount, status)

@@ -5,7 +5,6 @@ import com.MyProject.User.entity.User;
 import com.MyProject.User.exception.GlobalException;
 import com.MyProject.User.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,27 +17,18 @@ public class UserService {
 
     /** Lấy thông tin sinh viên đang đăng nhập từ JWT principal. */
     @Transactional(readOnly = true)
-    public UserResponse getCurrentUser(UserDetails userDetails) {
-        User user = userRepository.findByUsername(userDetails.getUsername())
+    public UserResponse getCurrentUser(String userId) {
+        User user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new GlobalException.ResourceNotFoundException(
-                        "User", "username", userDetails.getUsername()));
+                        "User", "userId", userId));
         return toUserResponse(user);
     }
-
-    /** Lấy thông tin sinh viên theo ID — dùng bởi payment-service. */
-    @Transactional(readOnly = true)
-    public UserResponse getUserById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new GlobalException.ResourceNotFoundException("User", "id", id));
-        return toUserResponse(user);
-    }
-
-    @Transactional(readOnly = true)
-    public UserResponse getUserByStudentId(String studentId) {
-        User user = userRepository.findByStudentId(studentId)
-                .orElseThrow(() -> new GlobalException.ResourceNotFoundException("User", "studentId", studentId));
-        return toUserResponse(user);
-    }
+    // @Transactional(readOnly = true)
+    // public UserResponse getUserByStudentId(String studentId) {
+    //     User user = userRepository.findByStudentId(studentId)
+    //             .orElseThrow(() -> new GlobalException.ResourceNotFoundException("User", "studentId", studentId));
+    //     return toUserResponse(user);
+    // }
         private UserResponse toUserResponse(User user) {
         return new UserResponse(
                 user.getStudentId(),

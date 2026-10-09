@@ -29,7 +29,7 @@ import java.util.Map;
 public class InternalTokenFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(InternalTokenFilter.class);
-
+    
     @Value("${internal.service-token}")
     private String validToken;
 

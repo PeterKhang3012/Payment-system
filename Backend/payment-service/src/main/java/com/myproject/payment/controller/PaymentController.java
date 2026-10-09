@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.myproject.payment.dto.UserDtos;
+import com.myproject.payment.client.UserClient;
 import com.myproject.payment.dto.OtpDtos.GenerateOtpResponse;
 import com.myproject.payment.dto.OtpDtos.VerifyOtpRequest;
 import com.myproject.payment.dto.PaymentRequest;
@@ -18,9 +20,11 @@ import com.myproject.payment.service.PaymentService;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final UserClient userClient;
 
-    public PaymentController(PaymentService paymentService) {
+    public PaymentController(PaymentService paymentService, UserClient userClient) {
         this.paymentService = paymentService;
+        this.userClient = userClient;
     }
 
     @PostMapping("/request-otp")
@@ -30,7 +34,8 @@ public class PaymentController {
             @AuthenticationPrincipal Jwt jwt) {
 
         String userId = jwt.getClaimAsString("userId");
-        String email = "9conso@gmail.com";
+        UserDtos.UserResponse user = userClient.getEmailByUserId(authorization);
+        String email = user.email();
 
         return paymentService.requestOtp(
                 userId,

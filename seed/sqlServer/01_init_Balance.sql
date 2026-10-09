@@ -1,5 +1,6 @@
 -- Seed data for Balance table
 -- user_id corresponds to the userId used by Auth Service
+Use BalanceDB;
 
 INSERT INTO Balance (user_id, balance)
 VALUES
@@ -13,3 +14,5 @@ VALUES
     ('68d500000000000000000008', 7500000.00),
     ('68d500000000000000000009', 1000000.00),
     ('68d500000000000000000010', 25000000.00);
+
+Select * from Balance;
