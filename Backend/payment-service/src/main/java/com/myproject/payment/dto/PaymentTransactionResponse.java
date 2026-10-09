@@ -5,14 +5,14 @@ import java.time.LocalDateTime;
 
 public class PaymentTransactionResponse {
     final Long transactionId;
-    final Long studentId;
+    final Long tuitionId;
     final BigDecimal amount;
     final String status;
     final LocalDateTime createdAt;
 
-    public PaymentTransactionResponse(Long transactionId, Long studentId, BigDecimal amount, String status, LocalDateTime createdAt) {
+    public PaymentTransactionResponse(Long transactionId, Long tuitionId, BigDecimal amount, String status, LocalDateTime createdAt) {
         this.transactionId = transactionId;
-        this.studentId = studentId;
+        this.tuitionId = tuitionId;
         this.amount = amount;
         this.status = status;
         this.createdAt = createdAt;
@@ -22,8 +22,8 @@ public class PaymentTransactionResponse {
         return transactionId;
     }
 
-    public Long getStudentId() {
-        return studentId;
+    public Long getTuitionId() {
+        return tuitionId;
     }
 
     public BigDecimal getAmount() {
