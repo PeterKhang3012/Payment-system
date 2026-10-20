@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import com.myproject.balance.dto.BalanceResponse;
 import com.myproject.balance.dto.DeductBalanceResponse;
@@ -30,8 +31,10 @@ public class BalanceController {
     }
 
     @PostMapping("/deduct")
-    public DeductBalanceResponse deductBalance(@AuthenticationPrincipal Jwt jwt, @RequestBody BigDecimal amount) {
+    public DeductBalanceResponse deductBalance(@AuthenticationPrincipal Jwt jwt, 
+                                                @RequestHeader("Idempotency-Key") String paymentId, 
+                                                @RequestBody BigDecimal amount) {
         String userId = jwt.getClaimAsString("userId");
-        return balanceService.deductBalance(userId, amount);
+        return balanceService.deductBalance(userId, paymentId, amount);
     }
 }

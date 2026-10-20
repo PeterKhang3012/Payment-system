@@ -112,83 +112,91 @@ public class PaymentService {
         String code) {
 
         PaymentAttempt attempt = paymentAttemptService.getAttempt(paymentId);
-        Long studentId = attempt.getStudentId();
 
         if (!attempt.getUserId().equals(userId)) {
         throw new PaymentFailedException(
                 "Payment attempt does not belong to this user.");
         }
 
-        System.out.println("Redis userId = " + attempt.getUserId());
-        System.out.println("JWT userId   = " + userId);
-        System.out.println("Payment ID   = " + paymentId);
+        boolean acquired = paymentAttemptService.acquireProcessingLock(userId, paymentId);
 
-        // 1. Tạo request verify OTP
-        VerifyOtpRequest request =
-                new VerifyOtpRequest(
-                        paymentId,
-                        code);
-
-        // 2. Gửi sang OTP Service để xác thực
-        VerifyOtpResponse otpResponse =
-                otpClient.verifyOtp(request);
-
-        // 3. OTP không hợp lệ
-        if (!otpResponse.success()) {
-            throw new PaymentFailedException(
-                    otpResponse.message());
+        if (!acquired) {
+                throw new PaymentFailedException(
+                        "Another payment is currently being processed.");
         }
 
-        //otp hợp lệ thì bắt đầu thanh toán
+        try{  
+                Long studentId = attempt.getStudentId();
+                // 1. Tạo request verify OTP
+                VerifyOtpRequest request =
+                        new VerifyOtpRequest(
+                                paymentId,
+                                code);
 
-        // 4. Lấy lại thông tin học phí
-        TuitionResponse tuitionResponse =
-                tuitionClient.getTuitionByStudentId(
+                // 2. Gửi sang OTP Service để xác thực
+                VerifyOtpResponse otpResponse =
+                        otpClient.verifyOtp(request);
+
+                // 3. OTP không hợp lệ
+                if (!otpResponse.success()) {
+                throw new PaymentFailedException(
+                        otpResponse.message());
+                }
+
+                //otp hợp lệ thì bắt đầu thanh toán
+
+                // 4. Lấy lại thông tin học phí
+                TuitionResponse tuitionResponse =
+                        tuitionClient.getTuitionByStudentId(
+                                studentId,
+                                authorization);
+
+                // 5. Kiểm tra lại học phí
+                if (tuitionResponse.getStatus().equalsIgnoreCase("PAID")) {
+                throw new TuitionAlreadyPaidException(
+                        "Tuition has already been paid.");
+                }
+
+                // 6. Lấy lại số dư
+                BalanceResponse balanceResponse =
+                        balanceClient.getBalance(authorization);
+
+                // 7. Kiểm tra lại số dư
+                if (balanceResponse.getBalance()
+                        .compareTo(tuitionResponse.getAmount()) < 0) {
+
+                throw new InsufficientBalanceException(
+                        "Insufficient balance to pay tuition.");
+                }
+
+                // 8. Trừ tiền
+                DeductBalanceResponse deductBalance =
+                        balanceClient.deductBalance(
+                                paymentId,
+                                tuitionResponse.getAmount(),
+                                authorization);
+
+                // 9. Kiểm tra kết quả trừ tiền
+                if (!deductBalance.isSuccess()) {
+                throw new PaymentFailedException(
+                        "Payment failed.");
+                }
+
+                // 10. Cập nhật trạng thái học phí thành PAID
+                tuitionClient.markTuitionAsPaid(
                         studentId,
                         authorization);
 
-        // 5. Kiểm tra lại học phí
-        if (tuitionResponse.getStatus().equalsIgnoreCase("PAID")) {
-            throw new TuitionAlreadyPaidException(
-                    "Tuition has already been paid.");
+                // 11. Lưu lịch sử giao dịch
+                paymentTransactionService.createPaymentTransaction(
+                        userId,
+                        tuitionResponse.getTuitionId(),
+                        tuitionResponse.getAmount());
+
+                // 13. Thanh toán thành công -> xóa attempt 
+                paymentAttemptService.deleteAttempt(paymentId);
+        }finally{
+                paymentAttemptService.releaseProcessingLock(userId, paymentId);
         }
-
-        // 6. Lấy lại số dư
-        BalanceResponse balanceResponse =
-                balanceClient.getBalance(authorization);
-
-        // 7. Kiểm tra lại số dư
-        if (balanceResponse.getBalance()
-                .compareTo(tuitionResponse.getAmount()) < 0) {
-
-            throw new InsufficientBalanceException(
-                    "Insufficient balance to pay tuition.");
-        }
-
-        // 8. Trừ tiền
-        DeductBalanceResponse deductBalance =
-                balanceClient.deductBalance(
-                        tuitionResponse.getAmount(),
-                        authorization);
-
-        // 9. Kiểm tra kết quả trừ tiền
-        if (!deductBalance.isSuccess()) {
-            throw new PaymentFailedException(
-                    "Payment failed.");
-        }
-
-        // 10. Cập nhật trạng thái học phí thành PAID
-        tuitionClient.markTuitionAsPaid(
-                studentId,
-                authorization);
-
-        // 11. Lưu lịch sử giao dịch
-        paymentTransactionService.createPaymentTransaction(
-                userId,
-                tuitionResponse.getTuitionId(),
-                tuitionResponse.getAmount());
-
-        // 13. Thanh toán thành công -> xóa attempt 
-        paymentAttemptService.deleteAttempt(paymentId);
     }
 }

@@ -33,11 +33,13 @@ public class BalanceClient {
     }
 
     public DeductBalanceResponse deductBalance(
+            String paymentId,
             BigDecimal amount,
             String authorization) {
         return restClient.post()
                 .uri("/deduct")
                 .header("Authorization", authorization)
+                .header("Idempotency-Key", paymentId)
                 .body(amount)
                 .retrieve()
                 .body(DeductBalanceResponse.class);

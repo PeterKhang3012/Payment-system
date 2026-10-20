@@ -25,4 +25,13 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.NOT_FOUND)
                 .body(ex.getMessage());
     }
+
+    @ExceptionHandler(PaymentDeductionConflictException.class)
+    public ResponseEntity<String> handlePaymentDeductionConflict(
+            PaymentDeductionConflictException ex) {
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ex.getMessage());
+    }
 }
