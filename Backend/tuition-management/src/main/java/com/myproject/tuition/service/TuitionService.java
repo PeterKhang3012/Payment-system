@@ -31,10 +31,53 @@ public class TuitionService {
         );
     }
 
-    public void markTuitionAsPaid(Long studentId) {
-        Tuition tuition = tuitionRepository.findByStudentIdForUpdate(studentId)
-            .orElseThrow(() -> new TuitionNotFoundException("Tuition not found for student ID: " + studentId));
-        tuition.setStatus("PAID");
-        tuitionRepository.save(tuition);
+    public void claimTuition(Long studentId, String paymentId) {
+        validatePaymentId(paymentId);
+
+        int updated = tuitionRepository.claimTuition(
+            studentId, paymentId
+        );
+
+        if (updated == 0) {
+            throw new IllegalStateException(
+                "Tuition is already paid, being processed, or not found"
+            );
+        }
+    }
+
+    public void markTuitionAsPaid(Long studentId, String paymentId) {
+        validatePaymentId(paymentId);
+
+        int updated = tuitionRepository.completeTuition(
+            studentId, paymentId
+        );
+
+        if (updated == 0) {
+            throw new IllegalStateException(
+                "Cannot complete tuition: payment does not own the claim"
+            );
+        }
+    }
+
+    public void releaseTuition(Long studentId, String paymentId) {
+        validatePaymentId(paymentId);
+
+        int updated = tuitionRepository.releaseTuition(
+            studentId, paymentId
+        );
+
+        if (updated == 0) {
+            throw new IllegalStateException(
+                "Cannot release tuition: payment does not own the claim"
+            );
+        }
+    }
+
+    private void validatePaymentId(String paymentId) {
+        if (paymentId == null || paymentId.isBlank()) {
+            throw new IllegalArgumentException(
+                "paymentId must not be blank"
+            );
+        }
     }
 }

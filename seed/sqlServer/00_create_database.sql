@@ -1,0 +1,15 @@
+IF DB_ID(N'UserDB') IS NULL
+    CREATE DATABASE [UserDB];
+GO
+
+IF DB_ID(N'PaymentDB') IS NULL
+    CREATE DATABASE [PaymentDB];
+GO
+
+IF DB_ID(N'TuitionDB') IS NULL
+    CREATE DATABASE [TuitionDB];
+GO
+
+IF DB_ID(N'BalanceDB') IS NULL
+    CREATE DATABASE [BalanceDB];
+GO

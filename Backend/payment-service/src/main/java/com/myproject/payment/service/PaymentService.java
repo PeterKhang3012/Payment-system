@@ -69,6 +69,12 @@ public class PaymentService {
                     "Tuition has already been paid.");
         }
 
+        if (!"UNPAID".equalsIgnoreCase(tuitionResponse.getStatus())) {
+            throw new PaymentFailedException(
+                "Tuition is currently being processed."
+            );
+        }       
+
         // 4. Lấy số dư hiện tại
         BalanceResponse balanceResponse =
                 balanceClient.getBalance(authorization);
@@ -80,6 +86,7 @@ public class PaymentService {
             throw new InsufficientBalanceException(
                     "Insufficient balance to pay tuition.");
         }
+
 
         // 6. Tạo paymentId để OTP Service xác định
         //    OTP này thuộc giao dịch thanh toán nào
@@ -125,6 +132,12 @@ public class PaymentService {
                         "Another payment is currently being processed.");
         }
 
+        boolean tuitionClaimed = false;
+       
+        // Chỉ true khi biết chắc tiền chưa bị trừ,
+        // nên có thể giải phóng claim an toàn.
+        boolean safeToReleaseClaim = false;
+        
         try{  
                 Long studentId = attempt.getStudentId();
                 // 1. Tạo request verify OTP
@@ -157,6 +170,19 @@ public class PaymentService {
                         "Tuition has already been paid.");
                 }
 
+                if (!"UNPAID".equalsIgnoreCase(
+                        tuitionResponse.getStatus())) {
+                        throw new PaymentFailedException(
+                        "Tuition is currently being processed."
+                        );
+                }
+                // 3. CLAIM HỌC PHÍ TRƯỚC KHI TRỪ TIỀN
+                tuitionClient.claimTuition(
+                        studentId, paymentId, authorization
+                );
+
+                tuitionClaimed = true;
+                safeToReleaseClaim = true;     
                 // 6. Lấy lại số dư
                 BalanceResponse balanceResponse =
                         balanceClient.getBalance(authorization);
@@ -168,6 +194,11 @@ public class PaymentService {
                 throw new InsufficientBalanceException(
                         "Insufficient balance to pay tuition.");
                 }
+
+                // Bắt đầu gọi API trừ tiền.
+                // Nếu request lỗi hoặc timeout, không thể mặc định
+                // rằng tiền chưa bị trừ.
+                safeToReleaseClaim = false;
 
                 // 8. Trừ tiền
                 DeductBalanceResponse deductBalance =
@@ -185,6 +216,7 @@ public class PaymentService {
                 // 10. Cập nhật trạng thái học phí thành PAID
                 tuitionClient.markTuitionAsPaid(
                         studentId,
+                        paymentId,
                         authorization);
 
                 // 11. Lưu lịch sử giao dịch
@@ -195,6 +227,25 @@ public class PaymentService {
 
                 // 13. Thanh toán thành công -> xóa attempt 
                 paymentAttemptService.deleteAttempt(paymentId);
+        } catch (RuntimeException ex) {
+
+            // Chỉ release nếu đã claim và biết chắc chưa trừ tiền.
+            // Nếu không rõ kết quả trừ tiền, giữ claim để đối soát.
+            if (tuitionClaimed && safeToReleaseClaim) {
+                try {
+                    tuitionClient.releaseTuition(
+                        attempt.getStudentId(),
+                        paymentId,
+                        authorization
+                    );
+                } catch (RuntimeException releaseException) {
+                    // Giữ lại lỗi release để phục vụ chẩn đoán.
+                    ex.addSuppressed(releaseException);
+                }
+            }
+
+            throw ex;
+
         }finally{
                 paymentAttemptService.releaseProcessingLock(userId, paymentId);
         }

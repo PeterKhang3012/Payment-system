@@ -28,6 +28,9 @@ public class Tuition {
     @Column(name = "status", nullable = false)
     private String status;
 
+    @Column(name = "processing_payment_id")
+    private String processingPaymentId;
+
     public Tuition() {
     }
 
@@ -69,5 +72,13 @@ public class Tuition {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getProcessingPaymentId() {
+        return processingPaymentId;
+    }
+
+    public void setProcessingPaymentId(String processingPaymentId) {
+        this.processingPaymentId = processingPaymentId;
     }
 }

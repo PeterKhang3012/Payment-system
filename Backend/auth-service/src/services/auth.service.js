@@ -2,7 +2,14 @@ import Auth from "../../models/auth.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import fs from "fs";
-const secret = fs.readFileSync("./keys/private.pem", "utf8");
+
+const privateKeyPath = process.env.JWT_PRIVATE_KEY_PATH;
+
+if (!privateKeyPath) {
+  throw new Error("JWT_PRIVATE_KEY_PATH is not configured");
+}
+
+const privateKey = fs.readFileSync(privateKeyPath, "utf8");
 //login
 const login = async (username, password) => {
   const user = await Auth.findOne({ username });
@@ -18,7 +25,7 @@ const login = async (username, password) => {
 
   const token = jwt.sign(
     { userId: user.userId, username: user.username },
-    secret,
+    privateKey,
     { algorithm: "RS256", 
     expiresIn: process.env.JWT_EXPIRES_IN || "1h" },
   );

@@ -31,11 +31,39 @@ public class TuitionClient {
         }
     }
 
-    public void markTuitionAsPaid(Long studentId, String authorization) {
+    public void claimTuition(
+            Long studentId, String paymentId, String authorization) {
         restClient.put()
-                .uri("/{studentId}/paid", studentId)
+                .uri(uriBuilder -> uriBuilder
+                        .path("/{studentId}/claim")
+                        .queryParam("paymentId", paymentId)
+                        .build(studentId))
                 .header("Authorization", authorization)
                 .retrieve()
-                .body(Void.class);
+                .toBodilessEntity();
+    }
+
+    public void markTuitionAsPaid(
+            Long studentId, String paymentId, String authorization) {
+        restClient.put()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/{studentId}/paid")
+                        .queryParam("paymentId", paymentId)
+                        .build(studentId))
+                .header("Authorization", authorization)
+                .retrieve()
+                .toBodilessEntity();
+    }
+
+    public void releaseTuition(
+            Long studentId, String paymentId, String authorization) {
+        restClient.put()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/{studentId}/release")
+                        .queryParam("paymentId", paymentId)
+                        .build(studentId))
+                .header("Authorization", authorization)
+                .retrieve()
+                .toBodilessEntity();
     }
 }

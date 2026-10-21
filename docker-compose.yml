@@ -1,4 +1,28 @@
 services:
+  key-generator:
+    image: alpine:3.22
+    volumes:
+      - ./keys:/keys
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        apk add --no-cache openssl
+
+        if [ ! -f /keys/private.pem ] || [ ! -f /keys/public.pem ]; then
+          rm -f /keys/private.pem /keys/public.pem
+
+          openssl genpkey -algorithm RSA \
+            -out /keys/private.pem \
+            -pkeyopt rsa_keygen_bits:2048
+
+          openssl rsa -pubout \
+            -in /keys/private.pem \
+            -out /keys/public.pem
+
+          chmod 600 /keys/private.pem
+          chmod 644 /keys/public.pem
+        fi
 
   mongodb:
     image: mongo:8
@@ -52,6 +76,46 @@ services:
         timeout: 5s
         retries: 10
         start_period: 30s
+  
+  sqlserver-seed:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver-seed
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -e
+
+        echo "Waiting for SQL Server..."
+
+        until /opt/mssql-tools18/bin/sqlcmd \
+          -C -S sqlserver -U sa -P "$$SQLSERVER_PASSWORD" \
+          -Q "SELECT 1" >/dev/null 2>&1; do
+          sleep 2
+        done
+
+        echo "Creating databases and running seed scripts..."
+
+        for file in /seed/*.sql; do
+          [ -f "$$file" ] || continue
+
+          echo "Running $$file"
+
+          /opt/mssql-tools18/bin/sqlcmd \
+            -C -S sqlserver -U sa -P "$$SQLSERVER_PASSWORD" \
+            -b -i "$$file"
+        done
+
+        echo "SQL seed completed."
+    environment:
+      SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
+    volumes:
+      - ./seed/sqlserver:/seed:ro
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - payment-network
 
   redis:
       image: redis:8
@@ -70,7 +134,15 @@ services:
     env_file:
       - ./Backend/auth-service/.env
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_started
+      key-generator:
+        condition: service_completed_successfully
+    volumes:
+      - ./keys:/app/keys:ro
+    environment:
+      MONGO_URL: ${MONGO_URL}
+      JWT_PRIVATE_KEY_PATH: ${JWT_PRIVATE_KEY_PATH}
     networks:
       - payment-network
 
@@ -83,9 +155,14 @@ services:
     environment:
       SQLSERVER_USERNAME: ${SQLSERVER_USERNAME}
       SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
+      JWT_PUBLIC_KEY_PATH: ${JWT_PUBLIC_KEY_PATH}
     depends_on:
-      sqlserver:
-        condition: service_healthy
+      sqlserver-seed:
+        condition: service_completed_successfully
+      key-generator:
+        condition: service_completed_successfully
+    volumes:
+      - ./keys:/app/keys:ro
     networks:
       - payment-network
   
@@ -118,9 +195,14 @@ services:
     environment:
       SQLSERVER_USERNAME: ${SQLSERVER_USERNAME}
       SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
+      JWT_PUBLIC_KEY_PATH: ${JWT_PUBLIC_KEY_PATH}
     depends_on:
-      sqlserver:
-        condition: service_healthy
+      sqlserver-seed:
+        condition: service_completed_successfully
+      key-generator:
+        condition: service_completed_successfully
+    volumes:
+      - ./keys:/app/keys:ro
     networks:
       - payment-network
 
@@ -133,11 +215,18 @@ services:
     environment:
       SQLSERVER_USERNAME: ${SQLSERVER_USERNAME}
       SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
+      JWT_PUBLIC_KEY_PATH: ${JWT_PUBLIC_KEY_PATH}
     depends_on:
+      otp-service:
+        condition: service_started
       redis:
         condition: service_started
-      sqlserver:
-        condition: service_healthy
+      sqlserver-seed:
+        condition: service_completed_successfully
+      key-generator:
+        condition: service_completed_successfully
+    volumes:
+      - ./keys:/app/keys:ro
     networks:
       - payment-network
 
@@ -150,10 +239,15 @@ services:
     environment:
       SQLSERVER_USERNAME: ${SQLSERVER_USERNAME}
       SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
+      JWT_PUBLIC_KEY_PATH: ${JWT_PUBLIC_KEY_PATH}
     depends_on:
-      sqlserver:
-        condition: service_healthy
+      sqlserver-seed:
+        condition: service_completed_successfully
+      key-generator:
+        condition: service_completed_successfully
     restart: on-failure
+    volumes:
+      - ./keys:/app/keys:ro
     networks:
       - payment-network
 
