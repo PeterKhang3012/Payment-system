@@ -48,7 +48,6 @@ public class PaymentAttemptService {
             String userId,
             Long studentId,
             BigDecimal amount) {
-
         String activeKey = ACTIVE_PREFIX + userId;
         String attemptKey = KEY_PREFIX + paymentId;
         

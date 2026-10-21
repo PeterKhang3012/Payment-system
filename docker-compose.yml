@@ -131,8 +131,6 @@ services:
     container_name: auth-service
     ports:
       - "3000:3000"
-    env_file:
-      - ./Backend/auth-service/.env
     depends_on:
       mongodb:
         condition: service_started
