@@ -31,8 +31,6 @@ public class UserService {
     // }
         private UserResponse toUserResponse(User user) {
         return new UserResponse(
-                user.getStudentId(),
-                user.getUserId(),
                 user.getFullName(),
                 user.getEmail(),
                 user.getPhoneNumber(),
