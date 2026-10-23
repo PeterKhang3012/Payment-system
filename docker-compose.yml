@@ -1,0 +1,258 @@
+services:
+  key-generator:
+    image: alpine:3.22
+    volumes:
+      - ./keys:/keys
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        apk add --no-cache openssl
+
+        if [ ! -f /keys/private.pem ] || [ ! -f /keys/public.pem ]; then
+          rm -f /keys/private.pem /keys/public.pem
+
+          openssl genpkey -algorithm RSA \
+            -out /keys/private.pem \
+            -pkeyopt rsa_keygen_bits:2048
+
+          openssl rsa -pubout \
+            -in /keys/private.pem \
+            -out /keys/public.pem
+
+          chmod 600 /keys/private.pem
+          chmod 644 /keys/public.pem
+        fi
+
+  mongodb:
+    image: mongo:8
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+      - ./seed/mongo:/docker-entrypoint-initdb.d
+    networks:
+      - payment-network
+
+  otp-mysql:
+    image: mysql:8
+    container_name: otp-mysql
+    ports:
+     - "3307:3306"
+    environment:
+      MYSQL_DATABASE: otp_service_db
+      MYSQL_ROOT_PASSWORD: ${OTP_DB_PASSWORD}
+    volumes:
+      - otp-mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${OTP_DB_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - payment-network
+
+  
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: payment-sqlserver
+    restart: unless-stopped
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${SQLSERVER_PASSWORD}
+    ports:
+      - "1434:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql 
+    networks:
+      - payment-network
+    healthcheck:
+        test: /opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -Q "SELECT 1" || exit 1
+        interval: 10s
+        timeout: 5s
+        retries: 10
+        start_period: 30s
+  
+  sqlserver-seed:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver-seed
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -e
+
+        echo "Waiting for SQL Server..."
+
+        until /opt/mssql-tools18/bin/sqlcmd \
+          -C -S sqlserver -U sa -P "$$SQLSERVER_PASSWORD" \
+          -Q "SELECT 1" >/dev/null 2>&1; do
+          sleep 2
+        done
+
+        echo "Creating databases and running seed scripts..."
+
+        for file in /seed/*.sql; do
+          [ -f "$$file" ] || continue
+
+          echo "Running $$file"
+
+          /opt/mssql-tools18/bin/sqlcmd \
+            -C -S sqlserver -U sa -P "$$SQLSERVER_PASSWORD" \
+            -b -i "$$file"
+        done
+
+        echo "SQL seed completed."
+    environment:
+      SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
+    volumes:
+      - ./seed/sqlserver:/seed:ro
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - payment-network
+
+  redis:
+      image: redis:8
+      container_name: payment-redis
+      ports:
+        - "6379:6379"
+      networks:
+        - payment-network
+
+  auth-service:
+    build:
+      context: ./Backend/auth-service
+    container_name: auth-service
+    ports:
+      - "3000:3000"
+    depends_on:
+      mongodb:
+        condition: service_started
+      key-generator:
+        condition: service_completed_successfully
+    volumes:
+      - ./keys:/app/keys:ro
+    environment:
+      MONGO_URL: ${MONGO_URL}
+      JWT_PRIVATE_KEY_PATH: ${JWT_PRIVATE_KEY_PATH}
+    networks:
+      - payment-network
+
+  balance-management:
+    build:
+      context: ./Backend/balance-management
+    container_name: balance-management
+    ports:
+      - "3001:3001"
+    environment:
+      SQLSERVER_USERNAME: ${SQLSERVER_USERNAME}
+      SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
+      JWT_PUBLIC_KEY_PATH: ${JWT_PUBLIC_KEY_PATH}
+    depends_on:
+      sqlserver-seed:
+        condition: service_completed_successfully
+      key-generator:
+        condition: service_completed_successfully
+    volumes:
+      - ./keys:/app/keys:ro
+    networks:
+      - payment-network
+  
+  otp-service:
+    build: ./Backend/otp-service
+    container_name: otp-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://otp-mysql:3306/otp_service_db
+      SPRING_DATASOURCE_USERNAME: ${OTP_DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${OTP_DB_PASSWORD}
+
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
+    depends_on:
+      otp-mysql:
+        condition: service_healthy
+    networks:
+      - payment-network
+
+  tuition:
+    build:
+      context: ./Backend/tuition-management
+    container_name: tuition-management
+    ports:
+      - "3002:3002"
+    environment:
+      SQLSERVER_USERNAME: ${SQLSERVER_USERNAME}
+      SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
+      JWT_PUBLIC_KEY_PATH: ${JWT_PUBLIC_KEY_PATH}
+    depends_on:
+      sqlserver-seed:
+        condition: service_completed_successfully
+      key-generator:
+        condition: service_completed_successfully
+    volumes:
+      - ./keys:/app/keys:ro
+    networks:
+      - payment-network
+
+  payment:
+    build:
+      context: ./Backend/payment-service
+    container_name: payment-service
+    ports:
+      - "8080:8080"
+    environment:
+      SQLSERVER_USERNAME: ${SQLSERVER_USERNAME}
+      SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
+      JWT_PUBLIC_KEY_PATH: ${JWT_PUBLIC_KEY_PATH}
+    depends_on:
+      otp-service:
+        condition: service_started
+      redis:
+        condition: service_started
+      sqlserver-seed:
+        condition: service_completed_successfully
+      key-generator:
+        condition: service_completed_successfully
+    volumes:
+      - ./keys:/app/keys:ro
+    networks:
+      - payment-network
+
+  user-service:
+    build:
+      context: ./Backend/User
+    container_name: user-service
+    ports:
+      - "3006:3006"
+    environment:
+      SQLSERVER_USERNAME: ${SQLSERVER_USERNAME}
+      SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
+      JWT_PUBLIC_KEY_PATH: ${JWT_PUBLIC_KEY_PATH}
+    depends_on:
+      sqlserver-seed:
+        condition: service_completed_successfully
+      key-generator:
+        condition: service_completed_successfully
+    restart: on-failure
+    volumes:
+      - ./keys:/app/keys:ro
+    networks:
+      - payment-network
+
+volumes:
+    mongo-data:
+    otp-mysql-data:
+    sqlserver-data:
+networks:
+  payment-network:
+    driver: bridge
