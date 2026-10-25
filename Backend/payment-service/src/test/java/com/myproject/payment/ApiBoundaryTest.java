@@ -1,0 +1,71 @@
+package com.myproject.payment;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.http.MediaType;
+import com.myproject.payment.controller.PaymentController;
+import com.myproject.payment.service.PaymentService;
+import com.myproject.payment.exception.GlobalExceptionHandler;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+// API boundary regression: invalid requests must never reach business processing.
+class ApiBoundaryTest {
+    final PaymentService service = mock(PaymentService.class);
+    final MockMvc mvc = MockMvcBuilders.standaloneSetup(new PaymentController(service, mock(com.myproject.payment.client.UserClient.class)))
+        // Supply the authenticated principal without starting JWT infrastructure in this boundary test.
+        .setCustomArgumentResolvers(new org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver())
+        .setControllerAdvice(new GlobalExceptionHandler()).build();
+
+    @org.junit.jupiter.api.BeforeEach void authenticate() {
+        var jwt = org.springframework.security.oauth2.jwt.Jwt.withTokenValue("test").header("alg", "RS256").claim("userId", "user-1").build();
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+            new org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken(jwt));
+    }
+    @org.junit.jupiter.api.AfterEach void clearAuthentication() {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+    }
+
+    @Test void invalidInputHasNoSideEffects() throws Exception {
+        mvc.perform(post("/api/payments/request-otp").header("Authorization", "Bearer test")
+            .header("Idempotency-Key", "test").param("paymentId", "test")
+            .contentType(MediaType.APPLICATION_JSON).content("{\"studentId\":0,\"acceptedTerms\":true}"))
+            .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").exists());
+        verifyNoInteractions(service);
+    }
+    @Test void malformedOrMissingInputHasNoSideEffects() throws Exception {
+        mvc.perform(post("/api/payments/request-otp").header("Authorization", "Bearer test").header("Idempotency-Key", "test").contentType(MediaType.APPLICATION_JSON).content("{"))
+            .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").exists());
+        verifyNoInteractions(service);
+    }
+    @Test void invalidOtpHasNoSideEffects() throws Exception {
+        for (String body : new String[]{"{}","null","[]","{\"paymentId\":\"bad\",\"code\":\"123456\"}",
+            "{\"paymentId\":\"12345678-1234-1234-1234-123456789012\",\"code\":\"123\"}"}) {
+            mvc.perform(post("/api/payments/verify").header("Authorization","Bearer test")
+                .contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isBadRequest());
+        }
+        verifyNoInteractions(service);
+    }
+    @Test void validVerifyPreservesDelegation() throws Exception {
+        mvc.perform(post("/api/payments/verify").header("Authorization","Bearer test")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"paymentId\":\"12345678-1234-1234-1234-123456789012\",\"code\":\"123456\"}"))
+            .andExpect(status().isOk()).andExpect(content().string(""));
+        verify(service).verifyOtpAndPay("user-1","Bearer test","12345678-1234-1234-1234-123456789012","123456");
+    }
+    @Test void businessAndDownstreamErrorsAreSafe() {
+        var handler = new GlobalExceptionHandler();
+        org.junit.jupiter.api.Assertions.assertEquals(404,handler.PaymentNotFound(new com.myproject.payment.exception.PaymentNotFoundException("Unavailable")).getStatusCode().value());
+        org.junit.jupiter.api.Assertions.assertEquals(409,handler.handleConflict(new com.myproject.payment.exception.PaymentConflictException("Conflict")).getStatusCode().value());
+        org.junit.jupiter.api.Assertions.assertEquals(403,handler.handleForbidden(new com.myproject.payment.exception.PaymentForbiddenException("Forbidden")).getStatusCode().value());
+        var error = new org.springframework.web.client.ResourceAccessException("internal host password");
+        org.junit.jupiter.api.Assertions.assertEquals(502,handler.handleDownstream(error).getStatusCode().value());
+        org.junit.jupiter.api.Assertions.assertEquals("Payment could not be completed",handler.handlePaymentFailed(new com.myproject.payment.exception.PaymentFailedException("private details")).getBody().get("message"));
+    }
+    @Test void unexpectedFailureIsSanitized() {
+        var response = new GlobalExceptionHandler().handleUnexpected(new IllegalStateException("SQL secret /private/key"));
+        org.junit.jupiter.api.Assertions.assertEquals(500, response.getStatusCode().value());
+        org.junit.jupiter.api.Assertions.assertEquals("Internal server error", response.getBody().get("message"));
+    }
+}
