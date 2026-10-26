@@ -17,6 +17,8 @@ import com.myproject.payment.dto.PaymentAttempt;
 import com.myproject.payment.dto.TuitionResponse;
 import com.myproject.payment.exception.InsufficientBalanceException;
 import com.myproject.payment.exception.PaymentFailedException;
+import com.myproject.payment.exception.PaymentConflictException;
+import com.myproject.payment.exception.PaymentForbiddenException;
 import com.myproject.payment.exception.TermsNotAcceptedException;
 import com.myproject.payment.exception.TuitionAlreadyPaidException;
 
@@ -70,7 +72,8 @@ public class PaymentService {
         }
 
         if (!"UNPAID".equalsIgnoreCase(tuitionResponse.getStatus())) {
-            throw new PaymentFailedException(
+            // API error handling: this existing state rejection is a conflict.
+            throw new PaymentConflictException(
                 "Tuition is currently being processed."
             );
         }       
@@ -121,14 +124,16 @@ public class PaymentService {
         PaymentAttempt attempt = paymentAttemptService.getAttempt(paymentId);
 
         if (!attempt.getUserId().equals(userId)) {
-        throw new PaymentFailedException(
+        // API error handling: preserve the ownership check and return forbidden access.
+        throw new PaymentForbiddenException(
                 "Payment attempt does not belong to this user.");
         }
 
         boolean acquired = paymentAttemptService.acquireProcessingLock(userId, paymentId);
 
         if (!acquired) {
-                throw new PaymentFailedException(
+                // API error handling: preserve the lock check and return a state conflict.
+                throw new PaymentConflictException(
                         "Another payment is currently being processed.");
         }
 
@@ -172,7 +177,8 @@ public class PaymentService {
 
                 if (!"UNPAID".equalsIgnoreCase(
                         tuitionResponse.getStatus())) {
-                        throw new PaymentFailedException(
+                        // API error handling: this existing state rejection is a conflict.
+                        throw new PaymentConflictException(
                         "Tuition is currently being processed."
                         );
                 }

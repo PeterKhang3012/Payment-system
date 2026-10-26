@@ -37,6 +37,11 @@ public class OtpClient {
                 )
                 .body(request)
                 .retrieve()
+                // API error handling: internal service credentials failing are a dependency error, not user authentication.
+                .onStatus(status -> status.value() == 401 || status.value() == 403,
+                        (httpRequest, response) -> {
+                            throw new org.springframework.web.client.RestClientException("OTP service authorization failed");
+                        })
                 .body(GenerateOtpResponse.class);
     }
 
@@ -54,6 +59,11 @@ public class OtpClient {
                 )
                 .body(request)
                 .retrieve()
+                // API error handling: do not misreport internal token/configuration failures as a user login failure.
+                .onStatus(status -> status.value() == 401 || status.value() == 403,
+                        (httpRequest, response) -> {
+                            throw new org.springframework.web.client.RestClientException("OTP service authorization failed");
+                        })
                 .body(VerifyOtpResponse.class);
     }
 }

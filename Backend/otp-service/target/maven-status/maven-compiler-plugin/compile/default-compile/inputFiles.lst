@@ -8,3 +8,4 @@ D:\Payment System\Backend\otp-service\src\main\java\com\paymentsystem\otpservice
 D:\Payment System\Backend\otp-service\src\main\java\com\paymentsystem\otpservice\scheduler\OtpCleanupScheduler.java
 D:\Payment System\Backend\otp-service\src\main\java\com\paymentsystem\otpservice\dto\OtpDtos.java
 D:\Payment System\Backend\otp-service\src\main\java\com\paymentsystem\otpservice\service\OtpService.java
+D:\Payment System\Backend\otp-service\src\main\java\com\paymentsystem\otpservice\config\ApiJsonConfig.java

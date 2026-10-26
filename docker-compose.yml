@@ -124,6 +124,16 @@ services:
         - "6379:6379"
       networks:
         - payment-network
+  
+  client:
+    build: 
+      context: ./frontend
+      dockerfile: dockerfile
+    container_name: payment-client
+    ports:
+      - "5173:5173"
+    networks:
+      - payment-network
 
   auth-service:
     build:

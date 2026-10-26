@@ -1,3 +1,4 @@
+import { InvalidCredentialsError } from "../exception/auth.exception.js";
 import Auth from "../../models/auth.model.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -15,12 +16,14 @@ const login = async (username, password) => {
   const user = await Auth.findOne({ username });
 
   if (!user) {
-    throw new Error("INVALID_CREDENTIALS");
+    // API error handling: preserve credential rejection with an explicit exception type.
+    throw new InvalidCredentialsError();
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    throw new Error("INVALID_CREDENTIALS");
+    // API error handling: preserve credential rejection with an explicit exception type.
+    throw new InvalidCredentialsError();
   }
 
   const token = jwt.sign(

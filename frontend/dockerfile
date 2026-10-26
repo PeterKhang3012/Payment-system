@@ -1,0 +1,21 @@
+#client
+# 1. Dùng image Node.js có sẵn làm nền
+FROM node:20
+
+# 2. Tạo thư mục làm việc bên trong container
+WORKDIR /app
+
+# 3. Copy file quản lý thư viện vào trước
+COPY package*.json ./
+
+# 4. Cài đặt các thư viện (dependencies)
+RUN npm install
+
+# 5. Copy toàn bộ code còn lại vào container
+COPY . .
+
+# 6. Mở cổng 5173 (trùng với cổng bạn khai báo trong compose)
+EXPOSE 5173
+
+# 7. Lệnh để khởi chạy backend
+CMD ["npm", "run", "dev", "--", "--host"]

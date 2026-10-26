@@ -7,7 +7,7 @@ select seed.student_id, seed.user_id, seed.full_name, seed.email, seed.phone_num
 from(
     VALUES
         ('SV000001', '68d500000000000000000001', N'Nguyễn Văn An',  '9conso@gmail.com',   '0900000001', SYSDATETIME()),
-        ('SV000002', '68d500000000000000000002', N'Trần Thị Bình',  'binh.sv000002@example.com', '0900000002', SYSDATETIME()),
+        ('SV000002', '68d500000000000000000002', N'Trần Thị Bình',  '9conso@gmail.com', '0900000002', SYSDATETIME()),
         ('SV000003', '68d500000000000000000003', N'Lê Minh Cường',  'cuong.sv000003@example.com','0900000003', SYSDATETIME()),
         ('SV000004', '68d500000000000000000004', N'Phạm Thu Dung',  'dung.sv000004@example.com', '0900000004', SYSDATETIME()),
         ('SV000005', '68d500000000000000000005', N'Hoàng Quốc Huy', 'huy.sv000005@example.com',  '0900000005', SYSDATETIME()),
