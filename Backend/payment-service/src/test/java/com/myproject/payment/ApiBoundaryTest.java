@@ -13,7 +13,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 // API boundary regression: invalid requests must never reach business processing.
 class ApiBoundaryTest {
     final PaymentService service = mock(PaymentService.class);
-    final MockMvc mvc = MockMvcBuilders.standaloneSetup(new PaymentController(service, mock(com.myproject.payment.client.UserClient.class)))
+    final com.myproject.payment.client.UserClient userClient = mock(com.myproject.payment.client.UserClient.class);
+    final MockMvc mvc = MockMvcBuilders.standaloneSetup(new PaymentController(service, userClient))
         // Supply the authenticated principal without starting JWT infrastructure in this boundary test.
         .setCustomArgumentResolvers(new org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver())
         .setControllerAdvice(new GlobalExceptionHandler()).build();
@@ -48,11 +49,13 @@ class ApiBoundaryTest {
         verifyNoInteractions(service);
     }
     @Test void validVerifyPreservesDelegation() throws Exception {
+        when(userClient.getCurrentUser("Bearer test")).thenReturn(
+            new com.myproject.payment.dto.UserDtos.UserResponse(null, "user-1", "Nguyen Van B", "user@gmail.com", null, null));
         mvc.perform(post("/api/payments/verify").header("Authorization","Bearer test")
             .contentType(MediaType.APPLICATION_JSON)
             .content("{\"paymentId\":\"12345678-1234-1234-1234-123456789012\",\"code\":\"123456\"}"))
             .andExpect(status().isOk()).andExpect(content().string(""));
-        verify(service).verifyOtpAndPay("user-1","Bearer test","12345678-1234-1234-1234-123456789012","123456");
+        verify(service).verifyOtpAndPay("user-1","Bearer test","12345678-1234-1234-1234-123456789012","123456", "user@gmail.com", "Nguyen Van B");
     }
     @Test void businessAndDownstreamErrorsAreSafe() {
         var handler = new GlobalExceptionHandler();

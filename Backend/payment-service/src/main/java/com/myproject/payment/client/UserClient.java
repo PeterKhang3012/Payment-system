@@ -17,7 +17,7 @@ public class UserClient {
                 .build();
     }
 
-    public UserDtos.UserResponse getEmailByUserId(String authorization) {
+    public UserDtos.UserResponse getCurrentUser(String authorization) {
         try{
             return restClient.get()
                     .uri("/me")

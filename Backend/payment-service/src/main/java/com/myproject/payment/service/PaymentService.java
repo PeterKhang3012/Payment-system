@@ -1,5 +1,7 @@
 package com.myproject.payment.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -22,6 +24,13 @@ import com.myproject.payment.exception.PaymentForbiddenException;
 import com.myproject.payment.exception.TermsNotAcceptedException;
 import com.myproject.payment.exception.TuitionAlreadyPaidException;
 
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+
+import com.myproject.payment.client.EmailClient;
+import com.myproject.payment.dto.PaymentSuccessfulEvent;
+
 @Service
 public class PaymentService {
 
@@ -30,19 +39,22 @@ public class PaymentService {
     private final BalanceClient balanceClient;
     private final OtpClient otpClient;
     private final PaymentAttemptService paymentAttemptService;
+    private final EmailClient emailClient;
 
     public PaymentService(
             PaymentTransactionService paymentTransactionService,
             TuitionClient tuitionClient,
             BalanceClient balanceClient,
             OtpClient otpClient,
-            PaymentAttemptService paymentAttemptService) {
+            PaymentAttemptService paymentAttemptService,
+            EmailClient emailClient) {
 
         this.paymentTransactionService = paymentTransactionService;
         this.tuitionClient = tuitionClient;
         this.balanceClient = balanceClient;
         this.otpClient = otpClient;
         this.paymentAttemptService = paymentAttemptService;
+        this.emailClient = emailClient;
     }
 
     //yêu cầu otp
@@ -119,7 +131,9 @@ public class PaymentService {
         String userId, 
         String authorization, 
         String paymentId,
-        String code) {
+        String code,
+        String email,
+        String fullName) {
 
         PaymentAttempt attempt = paymentAttemptService.getAttempt(paymentId);
 
@@ -230,7 +244,21 @@ public class PaymentService {
                         userId,
                         tuitionResponse.getTuitionId(),
                         tuitionResponse.getAmount());
-
+                
+                
+                // 12. Gửi email thông báo thanh toán thành công
+                PaymentSuccessfulEvent emailRequest = new PaymentSuccessfulEvent(
+                        paymentId,
+                        userId,
+                        email,
+                        fullName,
+                        tuitionResponse.getStudentName(),
+                        String.valueOf(studentId),
+                        tuitionResponse.getAmount(),
+                        LocalDateTime.now()
+                );
+                emailClient.sendPaymentSuccessEmail(emailRequest);
+                
                 // 13. Thanh toán thành công -> xóa attempt 
                 paymentAttemptService.deleteAttempt(paymentId);
         } catch (RuntimeException ex) {

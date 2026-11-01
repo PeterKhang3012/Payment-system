@@ -51,7 +51,7 @@ public class PaymentController {
                 "Terms and conditions must be accepted");
         }
         String userId = jwt.getClaimAsString("userId");
-        UserDtos.UserResponse user = userClient.getEmailByUserId(authorization);
+        UserDtos.UserResponse user = userClient.getCurrentUser(authorization);
         String email = user.email();
 
         return paymentService.requestOtp(
@@ -82,11 +82,15 @@ public class PaymentController {
 
         String userId = jwt.getClaimAsString("userId");
 
+        UserDtos.UserResponse user = userClient.getCurrentUser(authorization);
+        String email = user.email();
         paymentService.verifyOtpAndPay(
                 userId,
                 authorization,
                 request.paymentId(),
-                request.code()
+                request.code(),
+                email,
+                user.fullName()
             );
     }
 }
