@@ -15,7 +15,7 @@ public class OtpClient {
 
     private static final String OTP_SERVICE_URL = "http://otp-service:8083";
     private static final String INTERNAL_SERVICE_TOKEN =
-            "ps-internal-service-token-2025";
+            "{internal-service-token}";
 
     public OtpClient(RestClient.Builder restClientBuilder) {
         this.restClient = restClientBuilder
