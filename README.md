@@ -19,7 +19,6 @@ KDNPay là hệ thống thanh toán học phí đại học theo kiến trúc mi
 - [11. Khắc phục sự cố](#11-khắc-phục-sự-cố)
 - [12. Lưu ý bảo mật](#12-lưu-ý-bảo-mật)
 - [13. Hướng phát triển](#13-hướng-phát-triển)
-- [14. Tác giả](#14-tác-giả)
 
 ## 1. Tổng quan và chức năng
 
