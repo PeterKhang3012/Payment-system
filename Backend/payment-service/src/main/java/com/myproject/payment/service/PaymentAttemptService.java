@@ -11,7 +11,8 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import com.myproject.payment.dto.PaymentAttempt;
-import com.myproject.payment.exception.PaymentFailedException;
+import com.myproject.payment.exception.PaymentConflictException;
+import com.myproject.payment.exception.PaymentNotFoundException;
 
 @Service
 public class PaymentAttemptService {
@@ -60,7 +61,8 @@ public class PaymentAttemptService {
                 );
         // Nếu không đặt được khóa, nghĩa là đã có một payment attempt đang hoạt động
         if (!Boolean.TRUE.equals(reserved)) {
-            throw new PaymentFailedException(
+            // API error handling: an active attempt is a state conflict.
+            throw new PaymentConflictException(
                     "You already have an active payment attempt."
             );
         }
@@ -95,7 +97,7 @@ public class PaymentAttemptService {
                 redisTemplate.opsForValue().get(key);
 
         if (attempt == null) {
-            throw new IllegalArgumentException(
+            throw new PaymentNotFoundException(
                     "Payment attempt not found or expired.");
         }
 

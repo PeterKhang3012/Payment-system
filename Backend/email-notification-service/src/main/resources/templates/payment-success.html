@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Successful</title>
+</head>
+
+<body style="
+    margin: 0;
+    padding: 30px;
+    background-color: #f4f6f9;
+    font-family: Arial, sans-serif;
+">
+
+<div style="
+    max-width: 600px;
+    margin: auto;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+">
+
+    <div style="
+        background: #166534;
+        color: white;
+        padding: 25px;
+        text-align: center;
+    ">
+        <h1>KDNPay</h1>
+        <h2>Thanh toán thành công!</h2>
+    </div>
+
+    <div style="padding: 30px;">
+
+        <p>Xin chào <strong>{{fullName}}</strong>,</p>
+
+        <p>
+            Giao dịch thanh toán học phí của bạn đã được
+            thực hiện thành công.
+        </p>
+
+        <div style="
+            background: #f0fdf4;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        ">
+            <p>SỐ TIỀN ĐÃ THANH TOÁN</p>
+
+            <h1 style="color: #166534;">
+                {{amount}} VNĐ
+            </h1>
+        </div>
+
+        <h3>Thông tin giao dịch</h3>
+
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="padding: 10px;">Mã giao dịch</td>
+                <td style="padding: 10px;">
+                    <strong>{{paymentId}}</strong>
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding: 10px;">Mã sinh viên</td>
+                <td style="padding: 10px;">
+                    {{studentId}}
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding: 10px;">Thời gian</td>
+                <td style="padding: 10px;">
+                    {{paidAt}}
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding: 10px;">Trạng thái</td>
+                <td style="padding: 10px; color: green;">
+                    SUCCESS
+                </td>
+            </tr>
+        </table>
+
+        <p>
+            Cảm ơn bạn đã sử dụng dịch vụ KDNPay.
+        </p>
+
+    </div>
+
+    <div style="
+        background: #f4f6f9;
+        padding: 15px;
+        text-align: center;
+        color: #777;
+        font-size: 12px;
+    ">
+        Đây là email tự động. Vui lòng không trả lời email này.
+    </div>
+
+</div>
+
+</body>
+</html>

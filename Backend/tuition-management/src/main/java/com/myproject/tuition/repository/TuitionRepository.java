@@ -16,7 +16,7 @@ public interface TuitionRepository extends JpaRepository<Tuition, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT t FROM Tuition t WHERE t.studentId = :studentId")
     Optional<Tuition> findByStudentIdForUpdate(Long studentId);
-
+    boolean existsByStudentId(Long studentId);
         @Modifying
     @Query("""
         UPDATE Tuition t

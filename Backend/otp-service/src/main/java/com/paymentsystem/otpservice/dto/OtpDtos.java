@@ -11,17 +11,21 @@ public class OtpDtos {
     /** POST /api/otp/generate */
     public record GenerateOtpRequest(
         @NotBlank(message = "Payment ID la bat buoc")
-        String paymentId,
+        // API validation: respect the existing payment ID column capacity.
+        @jakarta.validation.constraints.Size(max = 100) String paymentId,
 
         @NotBlank(message = "Email la bat buoc")
         @Email(message = "Email khong dung dinh dang")
+        // API validation: reject email values exceeding the stored column capacity.
+        @jakarta.validation.constraints.Size(max = 150)
         String email
     ) {}
 
     /** POST /api/otp/verify */
     public record VerifyOtpRequest(
         @NotBlank(message = "Payment ID la bat buoc")
-        String paymentId,
+        // API validation: respect the existing payment ID column capacity.
+        @jakarta.validation.constraints.Size(max = 100) String paymentId,
 
         @NotBlank(message = "Ma OTP la bat buoc")
         @Pattern(regexp = "\\d{6}", message = "Ma OTP phai gom dung 6 chu so (0-9)")

@@ -124,6 +124,24 @@ services:
         - "6379:6379"
       networks:
         - payment-network
+  
+  client:
+    build: 
+      context: ./frontend
+      dockerfile: dockerfile
+    container_name: payment-client
+    ports:
+      - "5173:5173"
+    environment:
+      AUTH_TARGET: http://auth-service:3000
+      USER_TARGET: http://user-service:3006
+      BALANCE_TARGET: http://balance-management:3001
+      TUITION_TARGET: http://tuition:3002
+      PAYMENT_TARGET: http://payment:8080
+      OTP_TARGET: http://otp-service:8083
+      EMAIL_TARGET: http://send-email-service:3007
+    networks:
+      - payment-network
 
   auth-service:
     build:
@@ -159,6 +177,27 @@ services:
         condition: service_completed_successfully
       key-generator:
         condition: service_completed_successfully
+    volumes:
+      - ./keys:/app/keys:ro
+    networks:
+      - payment-network
+  
+  send-email-service:
+    build:
+      context: ./Backend/email-notification-service
+    container_name: email-notification-service
+    ports:
+      - "3007:3007"
+    environment:
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
+    depends_on:
+      otp-service:
+        condition: service_started
     volumes:
       - ./keys:/app/keys:ro
     networks:
@@ -214,6 +253,7 @@ services:
       SQLSERVER_USERNAME: ${SQLSERVER_USERNAME}
       SQLSERVER_PASSWORD: ${SQLSERVER_PASSWORD}
       JWT_PUBLIC_KEY_PATH: ${JWT_PUBLIC_KEY_PATH}
+      INTERNAL_SERVICE_TOKEN: ${INTERNAL_SERVICE_TOKEN}
     depends_on:
       otp-service:
         condition: service_started

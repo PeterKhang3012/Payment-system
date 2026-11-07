@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import com.myproject.tuition.dto.TuitionResponse;
 import com.myproject.tuition.entity.Tuition;
 import com.myproject.tuition.exception.TuitionNotFoundException;
+import com.myproject.tuition.exception.TuitionConflictException;
 import com.myproject.tuition.repository.TuitionRepository;
 
 import jakarta.transaction.Transactional;
@@ -39,7 +40,8 @@ public class TuitionService {
         );
 
         if (updated == 0) {
-            throw new IllegalStateException(
+            // API error handling: zero updated rows cannot prove absence; report a state conflict.
+            throw new TuitionConflictException(
                 "Tuition is already paid, being processed, or not found"
             );
         }
@@ -53,7 +55,8 @@ public class TuitionService {
         );
 
         if (updated == 0) {
-            throw new IllegalStateException(
+            // API error handling: zero updated rows cannot prove absence; report a state conflict.
+            throw new TuitionConflictException(
                 "Cannot complete tuition: payment does not own the claim"
             );
         }
@@ -67,10 +70,21 @@ public class TuitionService {
         );
 
         if (updated == 0) {
-            throw new IllegalStateException(
+            // API error handling: zero updated rows cannot prove absence; report a state conflict.
+            throw new TuitionConflictException(
                 "Cannot release tuition: payment does not own the claim"
             );
         }
+    }
+
+    private void throwConflictOrNotFound(Long studentId, String message) {
+        if (!tuitionRepository.existsByStudentId(studentId)) {
+            throw new TuitionNotFoundException(
+                "Tuition not found for student ID: " + studentId
+            );
+        }
+
+        throw new TuitionConflictException(message);
     }
 
     private void validatePaymentId(String paymentId) {

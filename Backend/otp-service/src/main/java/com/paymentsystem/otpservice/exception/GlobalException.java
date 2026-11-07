@@ -103,17 +103,32 @@ public final class GlobalException {
         }
 
         @ExceptionHandler(EmailSendException.class)
+        // Security: hide SMTP and recipient details from clients.
         public ResponseEntity<ErrorResponse> handleEmailFail(EmailSendException ex, HttpServletRequest req) {
-            return respond(HttpStatus.SERVICE_UNAVAILABLE, "Email Service Unavailable", ex.getMessage(), req);
+            return respond(HttpStatus.SERVICE_UNAVAILABLE, "Email Service Unavailable", "Unable to send OTP email", req);
         }
 
+        // API parsing: malformed JSON and incompatible types are client errors, never raw exceptions.
+        @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+        public ResponseEntity<ErrorResponse> handleUnreadable(Exception ex, HttpServletRequest req) {
+            return respond(HttpStatus.BAD_REQUEST, "Bad Request", "Invalid request body", req);
+        }
+
+        // Security: unclassified argument failures are system errors, not assumed business validation.
         @ExceptionHandler(IllegalArgumentException.class)
         public ResponseEntity<ErrorResponse> handleIllegalArg(IllegalArgumentException ex, HttpServletRequest req) {
-            return respond(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage(), req);
+            return respond(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "Internal server error", req);
         }
 
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ErrorResponse> handleGeneric(Exception ex, HttpServletRequest req) {
+            // API error handling: retain framework HTTP statuses without exposing parser or routing details.
+            if (ex instanceof org.springframework.web.ErrorResponse error) {
+                HttpStatus status = HttpStatus.resolve(error.getStatusCode().value());
+                if (status != null && status.is4xxClientError()) {
+                    return respond(status, status.getReasonPhrase(), "Invalid request", req);
+                }
+            }
             return respond(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error",
                     "Da xay ra loi khong mong muon. Vui long thu lai.", req);
         }

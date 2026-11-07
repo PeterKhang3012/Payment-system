@@ -1,1 +1,4 @@
 D:\Payment System\Backend\otp-service\src\test\java\com\paymentsystem\otpservice\OtpServiceApplicationTests.java
+D:\Payment System\Backend\otp-service\src\test\java\com\paymentsystem\otpservice\ApiBoundaryTest.java
+D:\Payment System\Backend\otp-service\src\test\java\com\paymentsystem\otpservice\JsonParsingTest.java
+D:\Payment System\Backend\otp-service\src\test\java\com\paymentsystem\otpservice\OtpLifecycleTest.java

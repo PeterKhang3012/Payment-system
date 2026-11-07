@@ -1,0 +1,73 @@
+@startuml
+left to right direction
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam linetype polyline
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+skinparam packageStyle rectangle
+skinparam nodesep 30
+skinparam ranksep 65
+skinparam usecase {
+  BackgroundColor #F0F6FF
+  BorderColor #355B85
+}
+actor "Người nộp tiền /\nSinh viên" as Payer
+rectangle "HỆ THỐNG THANH TOÁN HỌC PHÍ" {
+  usecase "Đăng nhập" as Login
+  usecase "Đăng xuất" as Logout
+  usecase "Xem thông tin\nngười dùng" as Profile
+  usecase "Xem số dư\nkhả dụng" as ViewBalance
+  usecase "Xem và lọc\nlịch sử giao dịch" as History
+  usecase "Tra cứu thông tin\nsinh viên và học phí" as Lookup
+  usecase "Yêu cầu mã OTP" as RequestOTP
+  usecase "Thanh toán học phí" as Pay
+  usecase "Kiểm tra số dư\nkhả dụng" as CheckBalance
+  usecase "Gửi email OTP" as SendOTP
+  usecase "Xác thực giao dịch\nbằng OTP" as VerifyOTP
+  usecase "Trừ số tiền\nkhỏi tài khoản" as Deduct
+  usecase "Ghi nhận học phí\nđã thanh toán" as UpdateTuition
+  usecase "Lưu lịch sử giao dịch\nthanh toán thành công" as SaveHistory
+  usecase "Gửi email xác nhận\ngiao dịch" as SendConfirmation
+
+  RequestOTP ..> CheckBalance : <<include>>
+  RequestOTP ..> SendOTP : <<include>>
+  Pay ..> VerifyOTP : <<include>>
+  Pay ..> CheckBalance : <<include>>
+  Pay ..> Deduct : <<include>>
+  Pay ..> UpdateTuition : <<include>>
+  Pay ..> SaveHistory : <<include>>
+  SendConfirmation .[norank].> Pay : <<extend>>\n[Thanh toán thành công]
+  Pay -[hidden]right-> SendConfirmation
+  SendOTP -[hidden]down-> SendConfirmation
+
+  note bottom of UpdateTuition
+    Chỉ ghi nhận học phí đã thanh toán
+    sau khi xác nhận trừ tiền thành công.
+    Sau đó mới lưu lịch sử thành công.
+  end note
+
+  legend bottom
+    Include mô tả các bước bắt buộc của luồng thanh toán thành công.
+    Nếu bước trước thất bại, các bước sau không được thực hiện.
+    Không có chức năng lưu lịch sử giao dịch thất bại trong luồng hiện tại.
+  endlegend
+
+  ' PaymentService.requestOtp calls getBalance and compares against tuition amount.
+  ' UpdateTuition is Tuition.status -> PAID, not an update to PaymentTransaction.
+  ' PaymentTransactionService creates a new PAID record only after tuition completion.
+  ' Include denotes required successful-flow behavior, not unconditional success.
+}
+actor "Dịch vụ Email" as Email
+
+Payer -- Login
+Payer -- Logout
+Payer -- Profile
+Payer -- ViewBalance
+Payer -- History
+Payer -- Lookup
+Payer -- RequestOTP
+Payer -- Pay
+SendOTP -- Email
+SendConfirmation -- Email
+@enduml

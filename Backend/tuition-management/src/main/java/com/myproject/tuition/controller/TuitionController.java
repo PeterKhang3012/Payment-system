@@ -1,5 +1,7 @@
-
 package com.myproject.tuition.controller;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +16,7 @@ import com.myproject.tuition.service.TuitionService;
 
 @RestController
 @RequestMapping("/api/tuitions")
+// API validation: Spring MVC validates path/query constraints before any tuition update.
 public class TuitionController {
 
     private final TuitionService tuitionService;
@@ -25,7 +28,8 @@ public class TuitionController {
     // Lấy thông tin học phí
     @GetMapping("/{studentId}")
     public TuitionResponse getTuitionByStudentId(
-            @PathVariable Long studentId) {
+            @PathVariable @Min(value = 1, message = "Student ID must be positive")
+            Long studentId) {
 
         return tuitionService.getTuitionByStudentId(studentId);
     }
@@ -33,8 +37,11 @@ public class TuitionController {
     // Claim học phí trước khi trừ tiền
     @PutMapping("/{studentId}/claim")
     public ResponseEntity<Void> claimTuition(
-            @PathVariable Long studentId,
-            @RequestParam String paymentId) {
+            @PathVariable @Min(value = 1, message = "Student ID must be positive")
+            Long studentId,
+            @RequestParam @NotBlank(message = "Payment ID is required")
+            // API validation: match the existing database string capacity.
+            @jakarta.validation.constraints.Size(max = 255) String paymentId) {
 
         tuitionService.claimTuition(studentId, paymentId);
         return ResponseEntity.ok().build();
@@ -43,8 +50,11 @@ public class TuitionController {
     // Đánh dấu học phí đã thanh toán
     @PutMapping("/{studentId}/paid")
     public ResponseEntity<Void> markTuitionAsPaid(
-            @PathVariable Long studentId,
-            @RequestParam String paymentId) {
+            @PathVariable @Min(value = 1, message = "Student ID must be positive")
+            Long studentId,
+            @RequestParam  @NotBlank(message = "Payment ID is required")
+            // API validation: match the existing database string capacity.
+            @jakarta.validation.constraints.Size(max = 255) String paymentId) {
 
         tuitionService.markTuitionAsPaid(studentId, paymentId);
         return ResponseEntity.ok().build();
@@ -53,8 +63,11 @@ public class TuitionController {
     // Giải phóng claim khi xác nhận giao dịch chưa trừ tiền
     @PutMapping("/{studentId}/release")
     public ResponseEntity<Void> releaseTuition(
-            @PathVariable Long studentId,
-            @RequestParam String paymentId) {
+            @PathVariable @Min(value = 1, message = "Student ID must be positive")
+            Long studentId,
+            @RequestParam @NotBlank(message = "Payment ID is required")
+            // API validation: match the existing database string capacity.
+            @jakarta.validation.constraints.Size(max = 255) String paymentId) {
 
         tuitionService.releaseTuition(studentId, paymentId);
         return ResponseEntity.ok().build();

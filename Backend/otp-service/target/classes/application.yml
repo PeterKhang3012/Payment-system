@@ -2,6 +2,12 @@ server:
   port: 8083
 
 spring:
+  # API validation: reject scalar coercion instead of accepting incorrect JSON types.
+  jackson:
+    mapper:
+      allow-coercion-of-scalars: false
+    deserialization:
+      accept-float-as-int: false
   application:
     name: otp-service
 

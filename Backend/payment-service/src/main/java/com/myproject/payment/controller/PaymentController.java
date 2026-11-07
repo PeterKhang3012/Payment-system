@@ -1,5 +1,7 @@
 package com.myproject.payment.controller;
 
+import jakarta.validation.Valid;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,9 +16,11 @@ import com.myproject.payment.dto.OtpDtos.GenerateOtpResponse;
 import com.myproject.payment.dto.OtpDtos.VerifyOtpRequest;
 import com.myproject.payment.dto.PaymentRequest;
 import com.myproject.payment.service.PaymentService;
+import com.myproject.payment.exception.BadRequestException;
 
 @RestController
 @RequestMapping("/api/payments")
+// API validation: use MVC boundary validation without a separate method-validation proxy.
 public class PaymentController {
 
     private final PaymentService paymentService;
@@ -29,12 +33,25 @@ public class PaymentController {
 
     @PostMapping("/request-otp")
     public GenerateOtpResponse requestOtp(
-            @RequestBody PaymentRequest paymentRequest,
+            @Valid @RequestBody PaymentRequest paymentRequest,
             @RequestHeader("Authorization") String authorization,
             @AuthenticationPrincipal Jwt jwt) {
 
+        if (paymentRequest == null) {
+            throw new BadRequestException("Request body is required");
+        }
+
+        if (paymentRequest.getStudentId() == null
+                || paymentRequest.getStudentId() <= 0) {
+            throw new BadRequestException("Invalid studentId");
+        }
+
+        if (!paymentRequest.isAcceptedTerms()) {
+            throw new BadRequestException(
+                "Terms and conditions must be accepted");
+        }
         String userId = jwt.getClaimAsString("userId");
-        UserDtos.UserResponse user = userClient.getEmailByUserId(authorization);
+        UserDtos.UserResponse user = userClient.getCurrentUser(authorization);
         String email = user.email();
 
         return paymentService.requestOtp(
@@ -47,17 +64,33 @@ public class PaymentController {
 
     @PostMapping("/verify")
     public void verifyOtpAndPay(
-            @RequestBody VerifyOtpRequest request,
+            @Valid @RequestBody VerifyOtpRequest request,
             @RequestHeader("Authorization") String authorization,
             @AuthenticationPrincipal Jwt jwt) {
+        
+        if (request == null) {
+            throw new BadRequestException("Request body is required");
+        }
+
+        if (request.paymentId() == null|| request.paymentId().isBlank()) {
+            throw new BadRequestException("Invalid paymentId");
+        }
+
+        if (request.code()==null) {
+            throw new BadRequestException("Invalid code");
+        }
 
         String userId = jwt.getClaimAsString("userId");
 
+        UserDtos.UserResponse user = userClient.getCurrentUser(authorization);
+        String email = user.email();
         paymentService.verifyOtpAndPay(
                 userId,
                 authorization,
                 request.paymentId(),
-                request.code()
+                request.code(),
+                email,
+                user.fullName()
             );
     }
 }
