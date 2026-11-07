@@ -3,6 +3,8 @@ package com.myproject.payment.client;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import com.myproject.payment.dto.OtpDtos.GenerateOtpRequest;
 import com.myproject.payment.dto.OtpDtos.GenerateOtpResponse;
 import com.myproject.payment.dto.OtpDtos.VerifyOtpRequest;
@@ -14,8 +16,8 @@ public class OtpClient {
     private final RestClient restClient;
 
     private static final String OTP_SERVICE_URL = "http://otp-service:8083";
-    private static final String INTERNAL_SERVICE_TOKEN =
-            "{internal-service-token}";
+    @Value("${internal.service-token}")
+    private String internalServiceToken;
 
     public OtpClient(RestClient.Builder restClientBuilder) {
         this.restClient = restClientBuilder
@@ -33,7 +35,7 @@ public class OtpClient {
                 .uri("/api/otp/generate")
                 .header(
                     "X-Internal-Service-Token",
-                    INTERNAL_SERVICE_TOKEN
+                    internalServiceToken
                 )
                 .body(request)
                 .retrieve()
@@ -55,7 +57,7 @@ public class OtpClient {
                 .uri("/api/otp/verify")
                 .header(
                     "X-Internal-Service-Token",
-                    INTERNAL_SERVICE_TOKEN
+                    internalServiceToken
                 )
                 .body(request)
                 .retrieve()

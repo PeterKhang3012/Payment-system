@@ -1,6 +1,7 @@
 import dotenv from "dotenv" ;
 import express from "express";
 import http from "http";
+import { fileURLToPath } from "node:url";
 import connectMongo from "./config/db.js";
 import cors from "cors";
 
@@ -19,6 +20,10 @@ app.use(express.json());
 const server = http.createServer(app);
 
 
+// Read-only documentation, independent of authentication business routes.
+app.get("/openapi.json", (req, res) => {
+    res.sendFile(fileURLToPath(new URL("./openapi.json", import.meta.url)));
+});
 app.use("/", authRouter);
 
 app.get("/", (req, res) => {

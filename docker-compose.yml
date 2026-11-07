@@ -132,6 +132,14 @@ services:
     container_name: payment-client
     ports:
       - "5173:5173"
+    environment:
+      AUTH_TARGET: http://auth-service:3000
+      USER_TARGET: http://user-service:3006
+      BALANCE_TARGET: http://balance-management:3001
+      TUITION_TARGET: http://tuition:3002
+      PAYMENT_TARGET: http://payment:8080
+      OTP_TARGET: http://otp-service:8083
+      EMAIL_TARGET: http://send-email-service:3007
     networks:
       - payment-network
 

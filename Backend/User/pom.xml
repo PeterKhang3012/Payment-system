@@ -81,7 +81,7 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.5.0</version> <!-- Bạn có thể dùng version mới nhất tương thích với Spring Boot của bạn -->
+            <version>3.2.0</version> <!-- Bạn có thể dùng version mới nhất tương thích với Spring Boot của bạn -->
         </dependency>
 		<!-- OAuth2 -->
 		<dependency>

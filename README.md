@@ -7,18 +7,23 @@ KDNPay là hệ thống thanh toán học phí đại học theo kiến trúc mi
 ## Mục lục
 
 - [1. Tổng quan và chức năng](#1-tổng-quan-và-chức-năng)
-- [2. Kiến trúc hệ thống](#2-kiến-trúc-hệ-thống)
-- [3. Công nghệ sử dụng](#3-công-nghệ-sử-dụng)
-- [4. Cấu trúc dự án](#4-cấu-trúc-dự-án)
-- [5. Yêu cầu môi trường](#5-yêu-cầu-môi-trường)
-- [6. Cài đặt và cấu hình](#6-cài-đặt-và-cấu-hình)
-- [7. Chạy ứng dụng](#7-chạy-ứng-dụng)
-- [8. Địa chỉ truy cập](#8-địa-chỉ-truy-cập)
-- [9. Tài liệu API](#9-tài-liệu-api)
-- [10. Quy trình thanh toán](#10-quy-trình-thanh-toán)
-- [11. Khắc phục sự cố](#11-khắc-phục-sự-cố)
-- [12. Lưu ý bảo mật](#12-lưu-ý-bảo-mật)
-- [13. Hướng phát triển](#13-hướng-phát-triển)
+- [2. Use case](#2-use-case)
+- [3. ERD](#3-erd)
+- [4. Kiến trúc hệ thống](#4-kiến-trúc-hệ-thống)
+- [Lựa chọn kiến trúc](#lựa-chọn-kiến-trúc)
+- [Giới hạn của bản hiện tại](#giới-hạn-của-bản-hiện-tại)
+- [5. Công nghệ sử dụng](#5-công-nghệ-sử-dụng)
+- [6. Cấu trúc dự án](#6-cấu-trúc-dự-án)
+- [7. Yêu cầu môi trường](#7-yêu-cầu-môi-trường)
+- [8. Cài đặt và cấu hình](#8-cài-đặt-và-cấu-hình)
+- [9. Chạy ứng dụng](#9-chạy-ứng-dụng)
+- [10. Địa chỉ truy cập](#10-địa-chỉ-truy-cập)
+- [11. Tài liệu API](#11-tài-liệu-api)
+- [Tài liệu API tương tác swagger-ui](#tài-liệu-api-tương-tác--swagger-ui)
+- [12. Quy trình thanh toán](#12-quy-trình-thanh-toán)
+- [13. Khắc phục sự cố](#13-khắc-phục-sự-cố)
+- [14. Lưu ý bảo mật](#14-lưu-ý-bảo-mật)
+- [15. Hướng phát triển](#15-hướng-phát-triển)
 
 ## 1. Tổng quan và chức năng
 
@@ -35,7 +40,75 @@ KDNPay là hệ thống thanh toán học phí đại học theo kiến trúc mi
 | Kiểm soát đồng thời | Redis reservation/lock, khóa bi quan tại database và claim học phí có điều kiện |
 | Chống khấu trừ trùng | Lưu kết quả khấu trừ theo `paymentId`, nhận qua header `Idempotency-Key` |
 
-## 2. Kiến trúc hệ thống
+## 2. Use case
+
+![Use case](./docs/diagrams/use-case/USE_CASE_DIAGRAM.png)
+
+## 3. ERD
+
+
+`2a. Thuộc tính và liên kết logic suy ra từ entity/seed; các đường nét đứt không phải FOREIGN KEY vật lý.`
+
+```mermaid
+---
+config:
+  flowchart:
+    htmlLabels: true
+    wrappingWidth: 1000
+    useMaxWidth: false
+---
+flowchart TB
+    Auth["<b>Auth (collection auths)</b><br/>MongoDB / payment_system<br/><br/>Khóa&nbsp;│&nbsp;Tên&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Data type<br/>─────┼──────────┼────────────<br/>PK&nbsp;&nbsp;&nbsp;│&nbsp;_id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;ObjectId<br/>UQ&nbsp;&nbsp;&nbsp;│&nbsp;userId&nbsp;&nbsp;&nbsp;│&nbsp;ObjectId<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;username&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;password&nbsp;│&nbsp;bcrypt hash"]
+
+    User["<b>User (users)</b><br/>SQL Server / UserDB<br/><br/>Khóa&nbsp;│&nbsp;Tên&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Data type<br/>─────┼──────────────┼──────────<br/>PK&nbsp;&nbsp;&nbsp;│&nbsp;id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Long<br/>UQ&nbsp;&nbsp;&nbsp;│&nbsp;student_id&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>UQ&nbsp;&nbsp;&nbsp;│&nbsp;user_id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;full_name&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;email&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;phone_number&nbsp;│&nbsp;String?<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;created_at&nbsp;&nbsp;&nbsp;│&nbsp;DateTime"]
+
+    Balance["<b>Balance (balance)</b><br/>SQL Server / BalanceDB<br/><br/>Khóa&nbsp;│&nbsp;Tên&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Data type<br/>─────┼─────────┼──────────<br/>PK&nbsp;&nbsp;&nbsp;│&nbsp;id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Long<br/>L&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;user_id&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;balance&nbsp;│&nbsp;Decimal"]
+
+    Tuition["<b>Tuition (tuition)</b><br/>SQL Server / TuitionDB<br/><br/>Khóa&nbsp;│&nbsp;Tên&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Data type<br/>─────┼──────────────────────┼──────────<br/>PK&nbsp;&nbsp;&nbsp;│&nbsp;id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Long<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;student_id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Long<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;student_name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;amount&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Decimal<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;status&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>C&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;processing_payment_id&nbsp;│&nbsp;String?"]
+
+    PaymentTransaction["<b>PaymentTransaction</b><br/>PaymentDB / payment_transaction<br/><br/>Khóa&nbsp;│&nbsp;Tên&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Data type<br/>─────┼────────────┼──────────<br/>PK&nbsp;&nbsp;&nbsp;│&nbsp;id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Long<br/>L&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;user_id&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>L&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;tuition_id&nbsp;│&nbsp;Long<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;amount&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Decimal<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;status&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;created_at&nbsp;│&nbsp;DateTime"]
+
+    BalanceDeduction["<b>BalanceDeduction</b><br/>BalanceDB / Balance_Deduction<br/><br/>Khóa&nbsp;│&nbsp;Tên&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Data type<br/>─────┼───────────────┼──────────<br/>PK&nbsp;&nbsp;&nbsp;│&nbsp;id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Long<br/>UQ&nbsp;&nbsp;&nbsp;│&nbsp;payment_id&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>L&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;user_id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;amount&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Decimal<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;balance_after&nbsp;│&nbsp;Decimal"]
+
+    Auth -.-|"0..1 — 1"| User
+    User -.-|"1 — 0..N"| Balance
+    User -.-|"1 — 0..N"| PaymentTransaction
+    User -.-|"1 — 0..N · user_id"| BalanceDeduction
+    Tuition -.-|"1 — 0..N"| PaymentTransaction
+
+    classDef entity fill:#ffffff,stroke:#cdd9dd,color:#193447,font-family:monospace,text-align:left;
+    class Auth,User,Balance,Tuition,PaymentTransaction,BalanceDeduction entity;
+```
+
+PK: khóa chính; UQ: duy nhất theo schema/entity; L: tham chiếu logic; C: mã tương quan; ?: có thể null. Các bội số 0..N phản ánh mô hình hiện có chưa có UNIQUE ở balance.user_id và payment_transaction.tuition_id. OTP và Redis được trình bày ở Hình 2b.
+
+
+`2b. Mô hình OTP và attempt; paymentId được dùng để tương quan giữa các kho dữ liệu. [S4–S7]`
+
+```mermaid
+---
+config:
+  flowchart:
+    htmlLabels: true
+    wrappingWidth: 1000
+    useMaxWidth: false
+---
+flowchart LR
+    PaymentAttempt["<b>PaymentAttempt</b><br/>Redis / payment-attempt:&#123;paymentId&#125;<br/><br/>Khóa&nbsp;│&nbsp;Tên&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Data Type<br/>─────┼────────────┼──────────<br/>KEY&nbsp;&nbsp;│&nbsp;paymentId&nbsp;&nbsp;│&nbsp;UUID<br/>L&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;userId&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>L&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;studentId&nbsp;&nbsp;│&nbsp;Long<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;amount&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Decimal"]
+
+    Otp["<b>Otp (otps)</b><br/>MySQL / otp_service_db<br/><br/>Khóa&nbsp;│&nbsp;Tên&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Data Type<br/>─────┼────────────┼──────────<br/>PK&nbsp;&nbsp;&nbsp;│&nbsp;id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Long<br/>UQ&nbsp;&nbsp;&nbsp;│&nbsp;payment_id&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;code&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String(6)<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;email&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;expires_at&nbsp;│&nbsp;DateTime<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;used&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Boolean<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;attempts&nbsp;&nbsp;&nbsp;│&nbsp;Integer<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;created_at&nbsp;│&nbsp;DateTime"]
+
+    PaymentAttempt -.-|"0..1 — 0..1"| Otp
+
+    classDef entity fill:#ffffff,stroke:#cdd9dd,color:#193447,font-family:monospace,text-align:left;
+    class PaymentAttempt,Otp entity;
+```
+
+Tương quan theo **paymentId**; không có FK.
+
+Attempt có TTL 5 phút; OTP có thời hạn riêng. Hết TTL/xóa attempt không xóa bản ghi OTP hoặc khấu trừ.
+
+## 4. Kiến trúc hệ thống
 
 Các backend giao tiếp đồng bộ bằng HTTP. Payment service dùng Spring `RestClient` để điều phối, chuyển tiếp Bearer token đến user, balance và tuition; OTP và email dùng header nội bộ. Không có message broker hoặc API gateway backend độc lập.
 
@@ -77,7 +150,39 @@ Tên service Compose khác một số tên container: `payment` có container `p
 
 Trong Docker, frontend gọi `/gateway/auth`, `/gateway/user`, `/gateway/balance`, `/gateway/tuition`, `/gateway/payment`. Vite bỏ tiền tố tương ứng và chuyển request tới backend trong mạng `payment-network`. Đây là proxy phát triển; bản build tĩnh cần cấu hình reverse proxy và SPA fallback riêng.
 
-## 3. Công nghệ sử dụng
+## Lựa chọn kiến trúc
+
+Các lựa chọn kiến trúc dưới đây được giải thích dựa trên cách phân rã chức năng và cơ chế đang được triển khai trong mã nguồn. [S1, S3–S8]
+
+| Lựa chọn | Lý do phù hợp | Đánh đổi |
+|---|---|---|
+| **Tách service theo miền nghiệp vụ** | Auth, hồ sơ người dùng, ví, học phí, thanh toán, OTP và email có trách nhiệm riêng. Mỗi service có mã nguồn và đơn vị triển khai riêng. | Nhiều tiến trình, cấu hình và điểm lỗi hơn ứng dụng đơn khối. Thay đổi từng service vẫn phải bảo đảm tương thích API với các service liên quan. |
+| **Payment điều phối tập trung** | Payment kiểm soát thứ tự xác thực OTP → claim học phí → khấu trừ số dư → cập nhật học phí → lưu lịch sử → gửi email. Frontend quản lý tương tác người dùng và gọi API. | Payment phụ thuộc vào khả năng đáp ứng của nhiều service trong cùng một request. Lỗi ở bước sau không tự động hoàn tác các bước đã thành công. |
+| **HTTP/JSON đồng bộ** | Phù hợp với luồng người dùng chờ kết quả; dễ theo dõi request và trình diễn. Tận dụng REST API và `RestClient` đang có trong mã nguồn. | Độ trễ cộng dồn qua các lời gọi. Timeout có thể khiến Payment chưa xác định được thao tác ở service khác đã thành công hay chưa. |
+| **Sử dụng nhiều loại datastore** | MongoDB lưu tài khoản xác thực; SQL Server lưu hồ sơ, ví, học phí và lịch sử giao dịch; MySQL lưu vòng đời OTP; Redis lưu payment attempt, reservation và processing lock có TTL. | Tăng chi phí cấu hình, vận hành và phối hợp dữ liệu. Đây là cách phân chia hiện tại của dự án, không phải yêu cầu bắt buộc phải sử dụng nhiều hệ quản trị cơ sở dữ liệu. |
+| **JWT RS256** | Auth ký token bằng private key; các backend xác thực chữ ký bằng public key mà không cần gọi Auth cho từng request. | Cần quản lý và phân phối khóa, kiểm tra thời hạn token. Logout hiện chỉ xóa trạng thái đăng nhập ở frontend, không thu hồi token đã phát hành. |
+| **Claim, lock và idempotency** | Claim bảo vệ quyền xử lý khoản học phí; khóa bi quan tại Balance bảo vệ số dư; `paymentId` nhận diện thao tác khấu trừ đã thực hiện để tránh trừ tiền lặp. Redis bổ sung reservation và processing lock cho luồng thanh toán. | Các cơ chế này không tạo thành transaction nguyên tử xuyên service. Vẫn cần xử lý trạng thái dở dang khi một bước thất bại sau khi bước trước đã cập nhật dữ liệu. |
+
+### Giới hạn của bản hiện tại
+
+1. **Transaction chỉ có phạm vi cục bộ.**  
+   Hệ thống chưa có cơ chế bảo đảm toàn bộ quy trình thanh toán cùng thành công hoặc cùng rollback, cũng chưa có quy trình Saga với các bước bù trừ và phục hồi hoàn chỉnh. Khi đã gọi khấu trừ nhưng chưa rõ kết quả, Payment giữ claim để phục vụ đối soát. Claim lưu trong SQL không có TTL tự giải phóng; chưa có tiến trình đối soát tự động hoàn chỉnh.
+
+2. **Email xác nhận nằm trong luồng HTTP đồng bộ.**  
+   Payment gọi service email sau khi số dư đã được khấu trừ, học phí đã chuyển sang `PAID` và lịch sử đã được lưu. Nếu gửi email thất bại, API có thể trả lỗi dù thanh toán đã hoàn tất và payment attempt chưa được xóa. Hệ thống chưa có outbox hoặc hàng đợi để gửi lại email độc lập với kết quả thanh toán. Tên DTO `PaymentSuccessfulEvent` không có nghĩa hệ thống đã sử dụng event bus hay message broker.
+
+3. **Vite là proxy phát triển.**  
+   Frontend sử dụng Vite để chuyển tiếp request đến các backend. Thành phần này chưa phải API Gateway dành cho môi trường production. Khi triển khai frontend dưới dạng bản build tĩnh, cần cấu hình reverse proxy và SPA fallback phù hợp.
+
+4. **Database SQL Server được tách logic nhưng dùng chung instance.**  
+   `UserDB`, `BalanceDB`, `TuitionDB` và `PaymentDB` là các database riêng trên cùng một SQL Server instance. Cách tổ chức này phân chia dữ liệu theo service nhưng chưa cung cấp sự độc lập hoàn toàn về tài nguyên và khả năng chịu lỗi hạ tầng.
+
+5. **API thay đổi số dư và học phí chưa có phân quyền riêng cho Payment.**  
+   Các API mutation của Balance và Tuition hiện sử dụng xác thực JWT chung, chưa có cơ chế phân quyền chỉ cho Payment gọi. Vì vậy, chưa thể coi toàn bộ API nội bộ đã được bảo vệ bằng danh tính service riêng.
+
+Các giới hạn trên mô tả trạng thái hiện tại của dự án. Những giải pháp như đối soát tự động, bù trừ giao dịch, outbox, hàng đợi và phân quyền giữa các service là hướng hoàn thiện, chưa được xem là chức năng đã triển khai.
+
+## 5. Công nghệ sử dụng
 
 | Nhóm | Công nghệ được khai báo/sử dụng |
 |---|---|
@@ -94,7 +199,7 @@ Trong Docker, frontend gọi `/gateway/auth`, `/gateway/user`, `/gateway/balance
 
 Các phiên bản trên lấy từ manifest và Dockerfile, không phải cam kết đã kiểm thử tương thích toàn bộ stack.
 
-## 4. Cấu trúc dự án
+## 6. Cấu trúc dự án
 
 ```text
 Payment-system/
@@ -129,7 +234,7 @@ Payment-system/
 
 Mỗi service Java chứa `pom.xml`, `Dockerfile`, `src/main/java`, `src/main/resources` và `src/test`. OTP dùng Maven trong Docker build; các service Java còn lại có Maven Wrapper.
 
-## 5. Yêu cầu môi trường
+## 7. Yêu cầu môi trường
 
 ### Chạy toàn bộ bằng Docker
 
@@ -146,7 +251,7 @@ Mỗi service Java chứa `pom.xml`, `Dockerfile`, `src/main/java`, `src/main/re
 - OpenSSL nếu tự tạo RSA key ngoài Docker.
 - Database, Redis và SMTP vẫn cần hoạt động. Backend mặc định dùng hostname Docker; phải cấu hình hoặc cung cấp DNS phù hợp khi chạy trên host.
 
-## 6. Cài đặt và cấu hình
+## 8. Cài đặt và cấu hình
 
 ### Bước 1: Clone repository
 
@@ -223,7 +328,7 @@ Bỏ qua `mkdir keys` nếu thư mục đã tồn tại. Auth ký token bằng p
 
 Các API này yêu cầu JWT và dùng claim `userId` để xác định tài khoản; kiểm tra ownership của payment attempt cũng dùng claim này. Chưa có phân quyền theo vai trò admin/user trong security configuration. API mutation của balance và tuition hiện yêu cầu JWT nhưng chưa có cơ chế riêng chỉ cho payment service gọi.
 
-## 7. Chạy ứng dụng
+## 9. Chạy ứng dụng
 
 ### Toàn bộ bằng Docker Compose
 
@@ -323,7 +428,7 @@ Auth đọc private key khi import module, trước lời gọi `dotenv.config()
 
 **Giới hạn chạy payment trên host:** Các client HTTP hiện hard-code hostname Docker (`user-service`, `balance-management`, `tuition-management`, `otp-service`, `email-notification-service`). Override database/Redis không thay các URL này. Nên chạy payment bằng Compose; chạy hoàn toàn local cần developer chuẩn bị phân giải tên/định tuyến tương ứng hoặc bổ sung cấu hình URL trong một thay đổi riêng.
 
-## 8. Địa chỉ truy cập
+## 10. Địa chỉ truy cập
 
 | Thành phần | Địa chỉ trên host | Cổng trong container |
 |---|---|---|
@@ -342,7 +447,7 @@ Auth đọc private key khi import module, trước lời gọi `dotenv.config()
 
 Container dùng tên DNS nội bộ và cổng container; `localhost` trong container là chính container đó. Ví dụ backend kết nối SQL Server tại `sqlserver:1433`, không phải `localhost:1434`.
 
-## 9. Tài liệu API
+## 11. Tài liệu API
 
 Các đường dẫn sau là đường dẫn backend trực tiếp, xác nhận từ controller/router. Thêm base URL ở bảng trên. Qua frontend proxy, thêm tiền tố gateway tương ứng, ví dụ `/gateway/user/api/users/me`.
 
@@ -365,27 +470,18 @@ Các đường dẫn sau là đường dẫn backend trực tiếp, xác nhận 
 
 Frontend chỉ gọi payment service để thanh toán; không tự gọi deduct, claim, paid, release hoặc OTP nội bộ.
 
-Body yêu cầu OTP qua payment:
+### Tài liệu API tương tác — Swagger UI
 
-```json
-{
-  "studentId": 100001,
-  "acceptedTerms": true
-}
-```
+Sau khi khởi động hệ thống, truy cập [http://localhost:5173/docs](http://localhost:5173/docs) để xem chi tiết endpoint, request/response model, kiểu dữ liệu, validation và các HTTP status code được mô tả.
 
-Body xác nhận thanh toán; thay placeholder bằng `paymentId` trả về và OTP nhận qua email:
+- Chọn service cần xem tài liệu.
+- Với API yêu cầu Bearer JWT, đăng nhập để lấy token rồi nhập token qua nút **Authorize**.
+- Với API nội bộ của OTP và Email, cung cấp header `X-Internal-Service-Token` theo cấu hình.
+- Sử dụng **Try it out → Execute** để gửi request thử nghiệm.
 
-```json
-{
-  "paymentId": "<paymentId-from-request-otp>",
-  "code": "<six-digit-code>"
-}
-```
+> **Lưu ý:** Request từ Swagger được gửi đến backend thật. Các API thanh toán, khấu trừ, cập nhật học phí và gửi email có thể thay đổi dữ liệu hoặc gửi thư thực tế. Sử dụng tài khoản và dữ liệu thử nghiệm.
 
-Giữ OTP ở kiểu chuỗi để bảo toàn số 0 đầu. Yêu cầu OTP không nhận số tiền hoặc email từ frontend: số tiền lấy từ tuition, email lấy từ hồ sơ đã xác thực. Response gồm `paymentId`, email được che, `expiresAt`, `expiresInSeconds`, `message`.
-
-## 10. Quy trình thanh toán
+## 12. Quy trình thanh toán
 
 ```mermaid
 sequenceDiagram
@@ -443,7 +539,7 @@ OTP được tiêu thụ trước bước claim và deduct. Nếu các bước s
 
 Khi timeout hoặc lỗi sau bước khấu trừ, kiểm tra số dư, học phí, lịch sử và log để đối soát trước khi tạo giao dịch mới. Không tự suy ra rằng tiền chưa bị trừ hoặc toàn bộ quy trình đã rollback.
 
-## 11. Khắc phục sự cố
+## 13. Khắc phục sự cố
 
 | Triệu chứng | Nguyên nhân có thể và hướng xử lý |
 |---|---|
@@ -474,7 +570,7 @@ docker compose logs --tail=100 auth-service payment otp-service send-email-servi
 
 Không chia sẻ log có thông tin cá nhân hoặc output cấu hình chứa secret. Các đường dẫn health được cho phép trong SecurityConfig không tự tạo endpoint health; không dùng chúng làm kiểm tra sức khỏe nếu chưa có handler tương ứng.
 
-## 12. Lưu ý bảo mật
+## 14. Lưu ý bảo mật
 
 - Không commit `.env`, private RSA key, database credential, mật khẩu SMTP hoặc internal token. `.gitignore` hiện bỏ qua `.env` và `keys`; vẫn kiểm tra `git status` trước khi public repository.
 - Không đưa secret vào frontend hoặc biến `VITE_*`, vì dữ liệu đó có thể xuất hiện trong bundle trình duyệt.
@@ -485,7 +581,7 @@ Không chia sẻ log có thông tin cá nhân hoặc output cấu hình chứa s
 - OTP đang được lưu dưới dạng code trong database; giới hạn quyền truy cập database và log. Không coi cấu hình `show-sql`/DEBUG hiện tại là cấu hình production.
 - JWT frontend lưu trong bộ nhớ, chưa có refresh token hoặc cơ chế thu hồi token phía server. Thao tác logout frontend chỉ xóa trạng thái local.
 
-## 13. Hướng phát triển
+## 15. Hướng phát triển
 
 Các mục dưới đây là đề xuất, chưa phải chức năng đã hoàn tất:
 
