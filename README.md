@@ -40,9 +40,47 @@ KDNPay là hệ thống thanh toán học phí đại học theo kiến trúc mi
 | Kiểm soát đồng thời | Redis reservation/lock, khóa bi quan tại database và claim học phí có điều kiện |
 | Chống khấu trừ trùng | Lưu kết quả khấu trừ theo `paymentId`, nhận qua header `Idempotency-Key` |
 
-## 2. Use case
+## 2. Use case Diagram
 
-![Use case](./docs/diagrams/use-case/USE_CASE_DIAGRAM.png)
+## 2.1. Phạm vi và Actor
+
+### 2.1.1. Phạm vi hệ thống
+
+Hệ thống KDNPay mô hình hóa các chức năng đã được triển khai trong Frontend và Backend, bao gồm các nghiệp vụ liên quan đến xác thực người dùng, quản lý thông tin tài khoản, tra cứu học phí và thanh toán học phí.
+
+### 2.1.2. Bối cảnh và mục tiêu
+
+Hệ thống tổ chức quy trình thanh toán học phí thành hai giai đoạn chính:
+
+1. **Khởi tạo yêu cầu thanh toán:** Người dùng cung cấp mã sinh viên cần thanh toán. Hệ thống kiểm tra các điều kiện thanh toán, tạo mã giao dịch (`paymentId`), lưu thông tin yêu cầu và gửi mã OTP đến email của người nộp tiền.
+2. **Xác nhận thanh toán:** Người dùng nhập mã OTP để xác nhận giao dịch. Sau khi OTP hợp lệ, hệ thống thực hiện khấu trừ số dư, cập nhật trạng thái học phí, ghi nhận lịch sử giao dịch và gửi email thông báo thanh toán thành công.
+
+Người nộp tiền được xác định thông qua tài khoản đang đăng nhập, trong khi sinh viên được thanh toán được xác định bằng mã sinh viên dùng để tra cứu học phí. Hai đối tượng này không nhất thiết phải là cùng một người.
+
+### 2.1.3. Actor
+
+| Actor | Vai trò và tương tác |
+|---|---|
+| **Người dùng / Người nộp tiền** | Actor chính của hệ thống. Có thể đăng nhập, xem thông tin tài khoản và số dư, tra cứu học phí, khởi tạo yêu cầu thanh toán, xác nhận giao dịch bằng OTP, xem lịch sử giao dịch và đăng xuất. |
+| **Máy chủ email SMTP** | Actor hỗ trợ bên ngoài. Tiếp nhận các email OTP và email xác nhận thanh toán do hệ thống gửi, sau đó chuyển tiếp đến địa chỉ email của người nộp tiền. |
+
+### 2.1.4. Danh mục chức năng chính
+
+| Mã | Use Case | Kết quả nghiệp vụ |
+|---|---|---|
+| UC01 | Đăng nhập | Kiểm tra thông tin xác thực và cấp JWT cho người dùng. |
+| UC02 | Xem hồ sơ tài khoản | Hiển thị họ tên, email, số điện thoại và ngày tạo tài khoản của người dùng đang đăng nhập. |
+| UC03 | Xem số dư | Truy xuất và hiển thị số dư của tài khoản người dùng hiện tại. |
+| UC04 | Tra cứu học phí | Tra cứu thông tin sinh viên, số tiền học phí và trạng thái thanh toán theo mã sinh viên. |
+| UC05 | Khởi tạo thanh toán và gửi OTP | Kiểm tra các điều kiện thanh toán, tạo `paymentId`, lưu thông tin yêu cầu thanh toán và gửi mã OTP đến email người nộp tiền. |
+| UC06 | Xác nhận thanh toán bằng OTP | Xác thực OTP, thực hiện khấu trừ số dư, cập nhật trạng thái học phí, ghi nhận lịch sử giao dịch và gửi email xác nhận thanh toán thành công. |
+| UC07 | Xem lịch sử giao dịch | Truy xuất và hiển thị các giao dịch có trạng thái `PAID` thuộc tài khoản người dùng đang đăng nhập. |
+| UC08 | Đăng xuất | Xóa JWT và trạng thái đăng nhập tại Frontend. |
+
+## 2.2 Use Case Diagram
+<p align="center">
+  <img src="./docs/diagrams/use-case/Use_Case.png" alt="Use case" width="600">
+</p>
 
 ## 3. ERD
 
@@ -451,24 +489,33 @@ Container dùng tên DNS nội bộ và cổng container; `localhost` trong cont
 
 Các đường dẫn sau là đường dẫn backend trực tiếp, xác nhận từ controller/router. Thêm base URL ở bảng trên. Qua frontend proxy, thêm tiền tố gateway tương ứng, ví dụ `/gateway/user/api/users/me`.
 
+### Public API
+
 | Service | Method | Endpoint | Mô tả và quyền truy cập |
 |---|---|---|---|
 | Auth | POST | `/login` | Username/password → JWT và thông tin tài khoản; không cần JWT |
 | User | GET | `/api/users/me` | Hồ sơ hiện tại; Bearer JWT |
 | Balance | GET | `/api/balances/me` | Số dư hiện tại; Bearer JWT |
-| Balance | POST | `/api/balances/deduct` | Khấu trừ; Bearer JWT, `Idempotency-Key`, body là số JSON dương |
 | Tuition | GET | `/api/tuitions/{studentId}` | Tra cứu theo mã sinh viên; Bearer JWT |
-| Tuition | PUT | `/api/tuitions/{studentId}/claim?paymentId=...` | Claim học phí; Bearer JWT |
-| Tuition | PUT | `/api/tuitions/{studentId}/paid?paymentId=...` | Hoàn tất claim đúng chủ; Bearer JWT |
-| Tuition | PUT | `/api/tuitions/{studentId}/release?paymentId=...` | Giải phóng claim đúng chủ; Bearer JWT |
 | Payment | POST | `/api/payments/request-otp` | Khởi tạo attempt và gửi OTP; Bearer JWT |
 | Payment | POST | `/api/payments/verify` | Xác thực OTP và thanh toán; Bearer JWT; thành công trả 2xx không có body |
 | Payment | GET | `/api/payment-transactions/history` | Lịch sử theo `userId` trong JWT |
+
+### Internal API
+
+| Service | Method | Endpoint | Mô tả và quyền truy cập |
+|---|---|---|---|
+| Balance | POST | `/api/balances/deduct` | Khấu trừ; Bearer JWT, `Idempotency-Key`, body là số JSON dương |
+| Tuition | PUT | `/api/tuitions/{studentId}/claim?paymentId=...` | Claim học phí; Bearer JWT |
+| Tuition | PUT | `/api/tuitions/{studentId}/paid?paymentId=...` | Hoàn tất claim đúng chủ; Bearer JWT |
+| Tuition | PUT | `/api/tuitions/{studentId}/release?paymentId=...` | Giải phóng claim đúng chủ; Bearer JWT |
 | OTP | POST | `/api/otp/generate` | Tạo/gửi OTP; header `X-Internal-Service-Token` |
 | OTP | POST | `/api/otp/verify` | Xác thực OTP; header `X-Internal-Service-Token` |
 | Email | POST | `/api/emails/payment-success` | Gửi email xác nhận; header `X-Internal-Service-Token` |
 
-Frontend chỉ gọi payment service để thanh toán; không tự gọi deduct, claim, paid, release hoặc OTP nội bộ.
+**Note:**
+- **Public API:** Các API được cung cấp để Frontend gọi trực tiếp nhằm phục vụ các chức năng nghiệp vụ của người dùng.
+- **Internal API:** Các API được sử dụng cho mục đích giao tiếp giữa các service trong hệ thống. Frontend không gọi trực tiếp các API này.
 
 ### Tài liệu API tương tác — Swagger UI
 
