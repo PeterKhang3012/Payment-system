@@ -51,7 +51,7 @@ class ApiBoundaryTest {
     }
     @Test void stringStudentIdIsTrimmedWithoutLosingLeadingZeros() throws Exception {
         when(userClient.getCurrentUser("Bearer test")).thenReturn(
-            new com.myproject.payment.dto.UserDtos.UserResponse(null, "user-1", "Student", "student@example.com", null, null));
+            new com.myproject.payment.dto.UserDtos.UserResponse("user-1", "Student", "student@example.com", null, null));
         mvc.perform(post("/api/payments/request-otp").header("Authorization", "Bearer test")
             .contentType(MediaType.APPLICATION_JSON)
             .content("{\"studentId\":\" 001 \",\"acceptedTerms\":true}"))
@@ -60,7 +60,7 @@ class ApiBoundaryTest {
     }
     @Test void alphanumericStudentIdsReachOtpRequestUnchanged() throws Exception {
         when(userClient.getCurrentUser("Bearer test")).thenReturn(
-            new com.myproject.payment.dto.UserDtos.UserResponse(null, "user-1", "Student", "student@example.com", null, null));
+            new com.myproject.payment.dto.UserDtos.UserResponse("user-1", "Student", "student@example.com", null, null));
         for (String id : new String[]{"SV001", "aB01", "000", "0", "ABC", "AB123456789012345678"}) {
             mvc.perform(post("/api/payments/request-otp").header("Authorization", "Bearer test")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -79,7 +79,7 @@ class ApiBoundaryTest {
     }
     @Test void validVerifyPreservesDelegation() throws Exception {
         when(userClient.getCurrentUser("Bearer test")).thenReturn(
-            new com.myproject.payment.dto.UserDtos.UserResponse(null, "user-1", "Nguyen Van B", "user@gmail.com", null, null));
+            new com.myproject.payment.dto.UserDtos.UserResponse("user-1", "Nguyen Van B", "user@gmail.com", null, null));
         mvc.perform(post("/api/payments/verify").header("Authorization","Bearer test")
             .contentType(MediaType.APPLICATION_JSON)
             .content("{\"paymentId\":\"12345678-1234-1234-1234-123456789012\",\"code\":\"123456\"}"))

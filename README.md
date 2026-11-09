@@ -85,6 +85,10 @@ Người nộp tiền được xác định thông qua tài khoản đang đăng
 
 ## 3. ERD
 
+User được định danh bằng `id` và liên kết với tài khoản đăng nhập bằng `user_id`; không lưu `student_id`. Mã sinh viên vẫn nằm ở Tuition và được nhập khi tra cứu học phí, độc lập với người nộp tiền.
+
+Với database đã khởi tạo trước thay đổi này, chạy `migrations/002_remove_user_student_id.up.sql` trước khi triển khai User service hoặc chạy lại seed. Migration xóa cột `users.student_id` cùng ràng buộc unique tương ứng; dữ liệu mã sinh viên cũ trong cột này sẽ bị xóa. `ddl-auto=update` không tự xóa cột cũ.
+
 `2a. Thuộc tính và liên kết logic suy ra từ entity/seed; các đường nét đứt không phải FOREIGN KEY vật lý.`
 
 ```mermaid
@@ -98,7 +102,7 @@ config:
 flowchart TB
     Auth["<b>Auth (collection auths)</b><br/>MongoDB / payment_system<br/><br/>Khóa&nbsp;│&nbsp;Tên&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Data type<br/>─────┼──────────┼────────────<br/>PK&nbsp;&nbsp;&nbsp;│&nbsp;_id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;ObjectId<br/>UQ&nbsp;&nbsp;&nbsp;│&nbsp;userId&nbsp;&nbsp;&nbsp;│&nbsp;ObjectId<br/>UQ&nbsp;&nbsp;&nbsp;│&nbsp;username&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;password&nbsp;│&nbsp;String "]
 
-    User["<b>User (users)</b><br/>SQL Server / UserDB<br/><br/>Khóa&nbsp;│&nbsp;Tên&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Data type<br/>─────┼──────────────┼──────────<br/>PK&nbsp;&nbsp;&nbsp;│&nbsp;id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Long<br/>UQ&nbsp;&nbsp;&nbsp;│&nbsp;student_id&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>UQ&nbsp;&nbsp;&nbsp;│&nbsp;user_id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;full_name&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>UQ&nbsp;&nbsp;&nbsp;│&nbsp;email&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;phone_number&nbsp;│&nbsp;String?<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;created_at&nbsp;&nbsp;&nbsp;│&nbsp;DateTime"]
+    User["<b>User (users)</b><br/>SQL Server / UserDB<br/><br/>Khóa&nbsp;│&nbsp;Tên&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Data type<br/>─────┼──────────────┼──────────<br/>PK&nbsp;&nbsp;&nbsp;│&nbsp;id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Long<br/>UQ&nbsp;&nbsp;&nbsp;│&nbsp;user_id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;full_name&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>UQ&nbsp;&nbsp;&nbsp;│&nbsp;email&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;phone_number&nbsp;│&nbsp;String?<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;created_at&nbsp;&nbsp;&nbsp;│&nbsp;DateTime"]
 
     Balance["<b>Balance (balance)</b><br/>SQL Server / BalanceDB<br/><br/>Khóa&nbsp;│&nbsp;Tên&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Data type<br/>─────┼─────────┼──────────<br/>PK&nbsp;&nbsp;&nbsp;│&nbsp;id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Long<br/>L&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;user_id&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;balance&nbsp;│&nbsp;Decimal"]
 

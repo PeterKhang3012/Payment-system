@@ -3,8 +3,8 @@ SET NOCOUNT ON;
 USE UserDB;
 BEGIN TRANSACTION;
 BEGIN TRY
-    INSERT dbo.users(student_id,user_id,full_name,email,created_at)
-    SELECT N'UNIQUE_TEST',N'UNIQUE_TEST',N'Unique test',email,SYSUTCDATETIME()
+    INSERT dbo.users(user_id,full_name,email,created_at)
+    SELECT N'UNIQUE_TEST',N'Unique test',email,SYSUTCDATETIME()
     FROM dbo.users WHERE id=1;
     THROW 51000, 'FAILED: duplicate email was accepted', 1;
 END TRY
@@ -15,20 +15,8 @@ END CATCH;
 ROLLBACK;
 BEGIN TRANSACTION;
 BEGIN TRY
-    INSERT dbo.users(student_id,user_id,full_name,email,created_at)
-    SELECT student_id,N'UNIQUE_TEST',N'Unique test',N'unique-test@example.invalid',SYSUTCDATETIME()
-    FROM dbo.users WHERE id=1;
-    THROW 51000, 'FAILED: duplicate users.studentId was accepted', 1;
-END TRY
-BEGIN CATCH
-    IF ERROR_NUMBER() NOT IN (2601,2627) THROW;
-    PRINT 'PASS: existing users.studentId unique preserved';
-END CATCH;
-ROLLBACK;
-BEGIN TRANSACTION;
-BEGIN TRY
-    INSERT dbo.users(student_id,user_id,full_name,email,created_at)
-    SELECT N'UNIQUE_TEST',N'UNIQUE_TEST',N'Unique test',UPPER(email),SYSUTCDATETIME()
+    INSERT dbo.users(user_id,full_name,email,created_at)
+    SELECT N'UNIQUE_TEST',N'Unique test',UPPER(email),SYSUTCDATETIME()
     FROM dbo.users WHERE id=1;
     THROW 51000, 'FAILED: email case-insensitive comparison changed', 1;
 END TRY

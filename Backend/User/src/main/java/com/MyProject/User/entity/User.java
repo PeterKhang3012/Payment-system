@@ -34,13 +34,6 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "student_id", nullable = false, unique = true, length = 20)
-    private String studentId;
-
-    public void setStudentId(String studentId) {
-        this.studentId = studentId == null ? null : studentId.trim();
-    }
-
     @Column(name = "user_id", nullable = false, unique = true, length = 50)
     private String userId;
 
@@ -58,7 +51,6 @@ public class User {
     @jakarta.persistence.PreUpdate
     private void normalizeAccountFields() {
         if (email != null) email = email.trim();
-        if (studentId != null) studentId = studentId.trim();
     }
 
     @Column(name = "phone_number", nullable = true, length = 15)

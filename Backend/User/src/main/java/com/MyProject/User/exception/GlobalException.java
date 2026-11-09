@@ -105,8 +105,7 @@ public final class GlobalException {
             Throwable cause = ex.getMostSpecificCause();
             if (cause instanceof java.sql.SQLException sql && (sql.getErrorCode() == 2601 || sql.getErrorCode() == 2627)) {
                 String detail = sql.getMessage();
-                String field = detail.contains("UQ_users_email") ? "Email"
-                        : detail.contains("UQ_users_student_id") ? "Student ID" : null;
+                String field = detail.contains("UQ_users_email") ? "Email" : null;
                 if (field != null) return respond(HttpStatus.CONFLICT, "Conflict", field + " already exists", req);
             }
             return handleGeneric(ex, req);

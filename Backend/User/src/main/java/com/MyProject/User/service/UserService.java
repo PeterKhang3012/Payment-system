@@ -23,12 +23,7 @@ public class UserService {
                         "User", "userId", userId));
         return toUserResponse(user);
     }
-    // @Transactional(readOnly = true)
-    // public UserResponse getUserByStudentId(String studentId) {
-    //     User user = userRepository.findByStudentId(studentId)
-    //             .orElseThrow(() -> new GlobalException.ResourceNotFoundException("User", "studentId", studentId));
-    //     return toUserResponse(user);
-    // }
+    
         private UserResponse toUserResponse(User user) {
         return new UserResponse(
                 user.getFullName(),

@@ -6,7 +6,7 @@ USE UserDB;
 SELECT COUNT_BIG(*) AS users_before FROM dbo.users WITH (TABLOCKX, HOLDLOCK);
 IF EXISTS (SELECT 1 FROM dbo.users GROUP BY LTRIM(RTRIM(email)) HAVING COUNT(*) > 1)
 BEGIN
-    SELECT id,student_id,email FROM dbo.users WHERE LTRIM(RTRIM(email)) IN
+    SELECT id,user_id,email FROM dbo.users WHERE LTRIM(RTRIM(email)) IN
         (SELECT LTRIM(RTRIM(email)) FROM dbo.users GROUP BY LTRIM(RTRIM(email)) HAVING COUNT(*) > 1);
     THROW 51000, 'Duplicate email: migration stopped; no data changed.', 1;
 END;
