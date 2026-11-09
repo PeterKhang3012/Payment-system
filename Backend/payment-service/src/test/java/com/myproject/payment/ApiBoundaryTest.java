@@ -40,6 +40,24 @@ class ApiBoundaryTest {
             .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").exists());
         verifyNoInteractions(service);
     }
+    @Test void invalidStringStudentIdsHaveNoSideEffects() throws Exception {
+        for (String id : new String[]{"", " ", "0", "000", "-1", "1.5", "SV001", "123456789012345678901"}) {
+            mvc.perform(post("/api/payments/request-otp").header("Authorization", "Bearer test")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"studentId\":\"" + id + "\",\"acceptedTerms\":true}"))
+                .andExpect(status().isBadRequest());
+        }
+        verifyNoInteractions(service, userClient);
+    }
+    @Test void stringStudentIdIsTrimmedWithoutLosingLeadingZeros() throws Exception {
+        when(userClient.getCurrentUser("Bearer test")).thenReturn(
+            new com.myproject.payment.dto.UserDtos.UserResponse(null, "user-1", "Student", "student@example.com", null, null));
+        mvc.perform(post("/api/payments/request-otp").header("Authorization", "Bearer test")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\"studentId\":\" 001 \",\"acceptedTerms\":true}"))
+            .andExpect(status().isOk());
+        verify(service).requestOtp("user-1", "001", true, "Bearer test", "student@example.com");
+    }
     @Test void invalidOtpHasNoSideEffects() throws Exception {
         for (String body : new String[]{"{}","null","[]","{\"paymentId\":\"bad\",\"code\":\"123456\"}",
             "{\"paymentId\":\"12345678-1234-1234-1234-123456789012\",\"code\":\"123\"}"}) {

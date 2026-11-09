@@ -17,7 +17,7 @@ public class TuitionClient {
                 .build();
     }
 
-    public TuitionResponse getTuitionByStudentId(Long studentId, String authorization) {
+    public TuitionResponse getTuitionByStudentId(String studentId, String authorization) {
         try{
             return restClient.get()
                     .uri("/{studentId}", studentId)
@@ -32,7 +32,7 @@ public class TuitionClient {
     }
 
     public void claimTuition(
-            Long studentId, String paymentId, String authorization) {
+            String studentId, String paymentId, String authorization) {
         restClient.put()
                 .uri(uriBuilder -> uriBuilder
                         .path("/{studentId}/claim")
@@ -44,7 +44,7 @@ public class TuitionClient {
     }
 
     public void markTuitionAsPaid(
-            Long studentId, String paymentId, String authorization) {
+            String studentId, String paymentId, String authorization) {
         restClient.put()
                 .uri(uriBuilder -> uriBuilder
                         .path("/{studentId}/paid")
@@ -56,7 +56,7 @@ public class TuitionClient {
     }
 
     public void releaseTuition(
-            Long studentId, String paymentId, String authorization) {
+            String studentId, String paymentId, String authorization) {
         restClient.put()
                 .uri(uriBuilder -> uriBuilder
                         .path("/{studentId}/release")

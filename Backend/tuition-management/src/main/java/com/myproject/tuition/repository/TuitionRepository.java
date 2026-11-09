@@ -15,8 +15,8 @@ import jakarta.persistence.LockModeType;
 public interface TuitionRepository extends JpaRepository<Tuition, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT t FROM Tuition t WHERE t.studentId = :studentId")
-    Optional<Tuition> findByStudentIdForUpdate(Long studentId);
-    boolean existsByStudentId(Long studentId);
+    Optional<Tuition> findByStudentIdForUpdate(String studentId);
+    boolean existsByStudentId(String studentId);
         @Modifying
     @Query("""
         UPDATE Tuition t
@@ -26,7 +26,7 @@ public interface TuitionRepository extends JpaRepository<Tuition, Long> {
           AND t.status = 'UNPAID'
     """)
     int claimTuition(
-        @Param("studentId") Long studentId,
+        @Param("studentId") String studentId,
         @Param("paymentId") String paymentId
     );
 
@@ -41,7 +41,7 @@ public interface TuitionRepository extends JpaRepository<Tuition, Long> {
           AND t.processingPaymentId = :paymentId
     """)
     int completeTuition(
-        @Param("studentId") Long studentId,
+        @Param("studentId") String studentId,
         @Param("paymentId") String paymentId
     );
 
@@ -56,7 +56,7 @@ public interface TuitionRepository extends JpaRepository<Tuition, Long> {
           AND t.processingPaymentId = :paymentId
     """)
     int releaseTuition(
-        @Param("studentId") Long studentId,
+        @Param("studentId") String studentId,
         @Param("paymentId") String paymentId
     );
 }

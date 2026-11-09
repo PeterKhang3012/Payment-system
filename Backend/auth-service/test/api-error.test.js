@@ -10,3 +10,10 @@ for (const [type, status] of [["entity.parse.failed",400],["entity.too.large",41
   assert.ok(result.message); assert.ok(!JSON.stringify(result).includes('private-key'));
  });
 }
+
+test('duplicate username returns a safe conflict', () => {
+ let result;
+ const res = { status(code) { assert.equal(code,409); return this; }, json(body) { result=body; } };
+ apiErrorHandler({code:11000,keyPattern:{username:1},message:'database private details'}, {}, res, () => assert.fail());
+ assert.deepEqual(result,{message:'Username already exists'});
+});

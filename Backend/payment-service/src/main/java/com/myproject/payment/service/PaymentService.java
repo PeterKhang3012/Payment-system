@@ -60,7 +60,7 @@ public class PaymentService {
     //yêu cầu otp
     public GenerateOtpResponse requestOtp(
             String userId,
-            Long studentId,
+            String studentId,
             boolean acceptedTerms,
             String authorization,
             String email) {
@@ -158,7 +158,7 @@ public class PaymentService {
         boolean safeToReleaseClaim = false;
         
         try{  
-                Long studentId = attempt.getStudentId();
+                String studentId = attempt.getStudentId();
                 // 1. Tạo request verify OTP
                 VerifyOtpRequest request =
                         new VerifyOtpRequest(

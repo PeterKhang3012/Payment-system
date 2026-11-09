@@ -13,6 +13,7 @@ BEGIN
         created_at DATETIME2 NOT NULL
             CONSTRAINT DF_users_created_at DEFAULT SYSUTCDATETIME(),
 
+        CONSTRAINT UQ_users_email UNIQUE (email),
         CONSTRAINT UQ_users_student_id UNIQUE (student_id),
         CONSTRAINT UQ_users_user_id UNIQUE (user_id)
     );

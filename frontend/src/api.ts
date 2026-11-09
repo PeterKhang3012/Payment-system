@@ -14,7 +14,7 @@ export interface Transaction {
 }
 export interface Tuition {
   tuitionId: number;
-  studentId: number;
+  studentId: string;
   studentName: string;
   status: string;
   amount: number;
@@ -74,7 +74,7 @@ export const api = {
         `${base.tuition}/api/tuitions/${encodeURIComponent(id)}`,
       )
     ).data,
-  requestOtp: async (studentId: number) =>
+  requestOtp: async (studentId: string) =>
     (
       await client.post<Otp>(`${base.payment}/api/payments/request-otp`, {
         studentId,

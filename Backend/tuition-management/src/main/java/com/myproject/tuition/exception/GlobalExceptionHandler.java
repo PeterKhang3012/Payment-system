@@ -23,6 +23,18 @@ public class GlobalExceptionHandler extends org.springframework.web.servlet.mvc.
         return ResponseEntity.badRequest().body(java.util.Map.of("message", "Invalid request"));
     }
 
+    @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+    public ResponseEntity<java.util.Map<String, String>> handleIntegrity(
+            org.springframework.dao.DataIntegrityViolationException ex) {
+        Throwable cause = ex.getMostSpecificCause();
+        if (cause instanceof java.sql.SQLException sql
+                && (sql.getErrorCode() == 2601 || sql.getErrorCode() == 2627)
+                && sql.getMessage().contains("UQ_tuition_student_id")) {
+            return ResponseEntity.status(409).body(java.util.Map.of("message", "Student ID already exists"));
+        }
+        return handleUnexpected(ex);
+    }
+
     // Security: unexpected failures must never expose internal exception details.
     @ExceptionHandler(Exception.class)
     public ResponseEntity<java.util.Map<String, String>> handleUnexpected(Exception ex) {

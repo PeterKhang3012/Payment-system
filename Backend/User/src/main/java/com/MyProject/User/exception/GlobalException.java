@@ -99,6 +99,19 @@ public final class GlobalException {
             return respond(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage(), req);
         }
 
+        @ExceptionHandler(org.springframework.dao.DataIntegrityViolationException.class)
+        public ResponseEntity<ErrorResponse> handleIntegrity(
+                org.springframework.dao.DataIntegrityViolationException ex, HttpServletRequest req) {
+            Throwable cause = ex.getMostSpecificCause();
+            if (cause instanceof java.sql.SQLException sql && (sql.getErrorCode() == 2601 || sql.getErrorCode() == 2627)) {
+                String detail = sql.getMessage();
+                String field = detail.contains("UQ_users_email") ? "Email"
+                        : detail.contains("UQ_users_student_id") ? "Student ID" : null;
+                if (field != null) return respond(HttpStatus.CONFLICT, "Conflict", field + " already exists", req);
+            }
+            return handleGeneric(ex, req);
+        }
+
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ErrorResponse> handleGeneric(Exception ex, HttpServletRequest req) {
             return respond(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error",

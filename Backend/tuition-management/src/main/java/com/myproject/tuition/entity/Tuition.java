@@ -10,14 +10,19 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "tuition")
+@Table(name = "tuition", uniqueConstraints = @jakarta.persistence.UniqueConstraint(
+        name = "UQ_tuition_student_id", columnNames = "student_id"))
 public class Tuition {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "student_id", nullable = false)
-    private Long studentId;
+    @Column(name = "student_id", nullable = false, length = 20)
+    @org.hibernate.annotations.Nationalized
+    @jakarta.validation.constraints.NotBlank
+    @jakarta.validation.constraints.Size(max = 20)
+    @jakarta.validation.constraints.Pattern(regexp = "[0-9]*[1-9][0-9]*")
+    private String studentId;
 
     @Column(name = "student_name", nullable = false)
     private String studentName;
@@ -31,6 +36,12 @@ public class Tuition {
     @Column(name = "processing_payment_id")
     private String processingPaymentId;
 
+    @jakarta.persistence.PrePersist
+    @jakarta.persistence.PreUpdate
+    private void normalizeStudentId() {
+        if (studentId != null) studentId = studentId.trim();
+    }
+
     public Tuition() {
     }
 
@@ -38,7 +49,7 @@ public class Tuition {
         return id;
     }
 
-    public Long getStudentId() {
+    public String getStudentId() {
         return studentId;
     }
 
@@ -58,8 +69,8 @@ public class Tuition {
         this.id = id;
     }
 
-    public void setStudentId(Long studentId) {
-        this.studentId = studentId;
+    public void setStudentId(String studentId) {
+        this.studentId = studentId == null ? null : studentId.trim();
     }
 
     public void setStudentName(String studentName) {

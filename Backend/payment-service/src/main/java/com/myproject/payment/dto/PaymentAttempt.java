@@ -6,7 +6,7 @@ public class PaymentAttempt {
 
     private String paymentId;
     private String userId;
-    private Long studentId;
+    private String studentId;
     private BigDecimal amount;
 
     public PaymentAttempt() {
@@ -15,12 +15,12 @@ public class PaymentAttempt {
     public PaymentAttempt(
             String paymentId,
             String userId,
-            Long studentId,
+            String studentId,
             BigDecimal amount) {
 
         this.paymentId = paymentId;
         this.userId = userId;
-        this.studentId = studentId;
+        this.studentId = studentId == null ? null : studentId.trim();
         this.amount = amount;
     }
 
@@ -40,12 +40,12 @@ public class PaymentAttempt {
         this.userId = userId;
     }
 
-    public Long getStudentId() {
+    public String getStudentId() {
         return studentId;
     }
 
-    public void setStudentId(Long studentId) {
-        this.studentId = studentId;
+    public void setStudentId(String studentId) {
+        this.studentId = studentId == null ? null : studentId.trim();
     }
 
     public BigDecimal getAmount() {

@@ -21,7 +21,8 @@ import java.time.LocalDateTime;
  * CustomUserDetailsService chịu trách nhiệm convert sang Spring Security principal.
  */
 @Entity
-@Table(name = "users")
+@Table(name = "users", uniqueConstraints = @jakarta.persistence.UniqueConstraint(
+        name = "UQ_users_email", columnNames = "email"))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -36,6 +37,10 @@ public class User {
     @Column(name = "student_id", nullable = false, unique = true, length = 20)
     private String studentId;
 
+    public void setStudentId(String studentId) {
+        this.studentId = studentId == null ? null : studentId.trim();
+    }
+
     @Column(name = "user_id", nullable = false, unique = true, length = 50)
     private String userId;
 
@@ -44,6 +49,17 @@ public class User {
 
     @Column(nullable = false, length = 100)
     private String email;
+
+    public void setEmail(String email) {
+        this.email = email == null ? null : email.trim();
+    }
+
+    @jakarta.persistence.PrePersist
+    @jakarta.persistence.PreUpdate
+    private void normalizeAccountFields() {
+        if (email != null) email = email.trim();
+        if (studentId != null) studentId = studentId.trim();
+    }
 
     @Column(name = "phone_number", nullable = true, length = 15)
     private String phoneNumber;

@@ -1,6 +1,8 @@
 package com.myproject.tuition.controller;
 
-import jakarta.validation.constraints.Min;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import jakarta.validation.constraints.NotBlank;
 
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,11 @@ import com.myproject.tuition.service.TuitionService;
 // API validation: Spring MVC validates path/query constraints before any tuition update.
 public class TuitionController {
 
+    @InitBinder("studentId")
+    public void trimStudentId(WebDataBinder binder) {
+        binder.registerCustomEditor(String.class, new StringTrimmerEditor(false));
+    }
+
     private final TuitionService tuitionService;
 
     public TuitionController(TuitionService tuitionService) {
@@ -28,8 +35,10 @@ public class TuitionController {
     // Lấy thông tin học phí
     @GetMapping("/{studentId}")
     public TuitionResponse getTuitionByStudentId(
-            @PathVariable @Min(value = 1, message = "Student ID must be positive")
-            Long studentId) {
+            @PathVariable @NotBlank(message = "Student ID is required")
+            @jakarta.validation.constraints.Size(max = 20)
+            @jakarta.validation.constraints.Pattern(regexp = "[0-9]*[1-9][0-9]*", message = "Student ID must contain digits and be positive")
+            String studentId) {
 
         return tuitionService.getTuitionByStudentId(studentId);
     }
@@ -37,8 +46,10 @@ public class TuitionController {
     // Claim học phí trước khi trừ tiền
     @PutMapping("/{studentId}/claim")
     public ResponseEntity<Void> claimTuition(
-            @PathVariable @Min(value = 1, message = "Student ID must be positive")
-            Long studentId,
+            @PathVariable @NotBlank(message = "Student ID is required")
+            @jakarta.validation.constraints.Size(max = 20)
+            @jakarta.validation.constraints.Pattern(regexp = "[0-9]*[1-9][0-9]*", message = "Student ID must contain digits and be positive")
+            String studentId,
             @RequestParam @NotBlank(message = "Payment ID is required")
             // API validation: match the existing database string capacity.
             @jakarta.validation.constraints.Size(max = 255) String paymentId) {
@@ -50,8 +61,10 @@ public class TuitionController {
     // Đánh dấu học phí đã thanh toán
     @PutMapping("/{studentId}/paid")
     public ResponseEntity<Void> markTuitionAsPaid(
-            @PathVariable @Min(value = 1, message = "Student ID must be positive")
-            Long studentId,
+            @PathVariable @NotBlank(message = "Student ID is required")
+            @jakarta.validation.constraints.Size(max = 20)
+            @jakarta.validation.constraints.Pattern(regexp = "[0-9]*[1-9][0-9]*", message = "Student ID must contain digits and be positive")
+            String studentId,
             @RequestParam  @NotBlank(message = "Payment ID is required")
             // API validation: match the existing database string capacity.
             @jakarta.validation.constraints.Size(max = 255) String paymentId) {
@@ -63,8 +76,10 @@ public class TuitionController {
     // Giải phóng claim khi xác nhận giao dịch chưa trừ tiền
     @PutMapping("/{studentId}/release")
     public ResponseEntity<Void> releaseTuition(
-            @PathVariable @Min(value = 1, message = "Student ID must be positive")
-            Long studentId,
+            @PathVariable @NotBlank(message = "Student ID is required")
+            @jakarta.validation.constraints.Size(max = 20)
+            @jakarta.validation.constraints.Pattern(regexp = "[0-9]*[1-9][0-9]*", message = "Student ID must contain digits and be positive")
+            String studentId,
             @RequestParam @NotBlank(message = "Payment ID is required")
             // API validation: match the existing database string capacity.
             @jakarta.validation.constraints.Size(max = 255) String paymentId) {

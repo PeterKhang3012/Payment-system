@@ -4,12 +4,12 @@ import java.math.BigDecimal;
 
 public class TuitionResponse {
     private Long tuitionId;
-    private Long studentId;
+    private String studentId;
     private String studentName;
     private String status;
     private BigDecimal amount;
 
-    public TuitionResponse(Long tuitionId, Long studentId, String studentName, String status, BigDecimal amount) {
+    public TuitionResponse(Long tuitionId, String studentId, String studentName, String status, BigDecimal amount) {
         this.tuitionId = tuitionId;
         this.studentId = studentId;
         this.studentName = studentName;
@@ -25,11 +25,11 @@ public class TuitionResponse {
         this.tuitionId = tuitionId;
     }
 
-    public Long getStudentId() {
+    public String getStudentId() {
         return studentId;
     }
 
-    public void setStudentId(Long studentId) {
+    public void setStudentId(String studentId) {
         this.studentId = studentId;
     }
 

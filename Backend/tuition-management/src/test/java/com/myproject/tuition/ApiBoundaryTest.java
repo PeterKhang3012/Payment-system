@@ -42,11 +42,24 @@ class ApiBoundaryTest {
     @Test void validRequestPreservesDelegation() throws Exception {
         mvc.perform(put("/api/tuitions/1/claim").param("paymentId", "test"))
             .andExpect(status().isOk());
-        verify(service).claimTuition(1L,"test");
+        verify(service).claimTuition("1","test");
+    }
+    @Test void stringIdsAreTrimmedAndLeadingZerosPreserved() throws Exception {
+        mvc.perform(get("/api/tuitions/{studentId}", " 001 ")).andExpect(status().isOk());
+        verify(service).getTuitionByStudentId("001");
+        mvc.perform(put("/api/tuitions/{studentId}/claim", " 001 ").param("paymentId", "test"))
+            .andExpect(status().isOk());
+        verify(service).claimTuition("001", "test");
+    }
+    @Test void invalidStringIdsDoNotReachService() throws Exception {
+        for (String id : new String[]{" ", "000", "-1", "1.5", "1x", "123456789012345678901"}) {
+            mvc.perform(get("/api/tuitions/{studentId}", id)).andExpect(status().isBadRequest());
+        }
+        verifyNoInteractions(service);
     }
     @Test void conflictIs409() throws Exception {
         doThrow(new com.myproject.tuition.exception.TuitionConflictException("State conflict"))
-            .when(service).claimTuition(1L,"test");
+            .when(service).claimTuition("1","test");
         mvc.perform(put("/api/tuitions/1/claim").param("paymentId", "test"))
             .andExpect(status().isConflict()).andExpect(jsonPath("$.message").value("State conflict"));
     }

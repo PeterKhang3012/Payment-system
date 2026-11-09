@@ -22,12 +22,12 @@ class JsonParsingTest {
             .withPropertyValues(values).run(context -> {
                 JsonMapper mapper = context.getBean(JsonMapper.class);
                 for (String body : new String[]{"{\"studentId\":1.5,\"acceptedTerms\":true}",
-                        "{\"studentId\":\"1\",\"acceptedTerms\":true}",
-                        "{\"studentId\":1,\"acceptedTerms\":\"true\"}"}) {
+                        "{\"studentId\":1,\"acceptedTerms\":true}",
+                        "{\"studentId\":\"1\",\"acceptedTerms\":\"true\"}"}) {
                     assertThrows(Exception.class, () -> mapper.readValue(body, PaymentRequest.class));
                 }
                 assertThrows(Exception.class, () -> mapper.readValue("{\"paymentId\":12,\"code\":123456}", VerifyOtpRequest.class));
-                assertEquals(1L, mapper.readValue("{\"studentId\":1,\"acceptedTerms\":true}", PaymentRequest.class).getStudentId());
+                assertEquals("001", mapper.readValue("{\"studentId\":\" 001 \",\"acceptedTerms\":true}", PaymentRequest.class).getStudentId());
             });
     }
 }

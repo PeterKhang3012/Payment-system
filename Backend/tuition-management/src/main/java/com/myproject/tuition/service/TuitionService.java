@@ -20,7 +20,7 @@ public class TuitionService {
     }
 
     //search for tuition by studentID
-    public TuitionResponse getTuitionByStudentId(Long studentId) {
+    public TuitionResponse getTuitionByStudentId(String studentId) {
         Tuition tuition = tuitionRepository.findByStudentIdForUpdate(studentId)
         .orElseThrow(() -> new TuitionNotFoundException("Tuition not found for student ID: " + studentId));
         return new TuitionResponse(
@@ -32,7 +32,7 @@ public class TuitionService {
         );
     }
 
-    public void claimTuition(Long studentId, String paymentId) {
+    public void claimTuition(String studentId, String paymentId) {
         validatePaymentId(paymentId);
 
         int updated = tuitionRepository.claimTuition(
@@ -47,7 +47,7 @@ public class TuitionService {
         }
     }
 
-    public void markTuitionAsPaid(Long studentId, String paymentId) {
+    public void markTuitionAsPaid(String studentId, String paymentId) {
         validatePaymentId(paymentId);
 
         int updated = tuitionRepository.completeTuition(
@@ -62,7 +62,7 @@ public class TuitionService {
         }
     }
 
-    public void releaseTuition(Long studentId, String paymentId) {
+    public void releaseTuition(String studentId, String paymentId) {
         validatePaymentId(paymentId);
 
         int updated = tuitionRepository.releaseTuition(
@@ -77,7 +77,7 @@ public class TuitionService {
         }
     }
 
-    private void throwConflictOrNotFound(Long studentId, String message) {
+    private void throwConflictOrNotFound(String studentId, String message) {
         if (!tuitionRepository.existsByStudentId(studentId)) {
             throw new TuitionNotFoundException(
                 "Tuition not found for student ID: " + studentId

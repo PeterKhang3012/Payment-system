@@ -12,12 +12,12 @@ class TuitionErrorMappingTest {
     @Test void zeroUpdatedRowsRemainConflictsWithoutExtraQueries() {
         var repository = mock(TuitionRepository.class);
         var service = new TuitionService(repository);
-        assertThrows(TuitionConflictException.class, () -> service.claimTuition(1L,"payment"));
-        assertThrows(TuitionConflictException.class, () -> service.markTuitionAsPaid(1L,"payment"));
-        assertThrows(TuitionConflictException.class, () -> service.releaseTuition(1L,"payment"));
-        verify(repository).claimTuition(1L,"payment");
-        verify(repository).completeTuition(1L,"payment");
-        verify(repository).releaseTuition(1L,"payment");
+        assertThrows(TuitionConflictException.class, () -> service.claimTuition("1","payment"));
+        assertThrows(TuitionConflictException.class, () -> service.markTuitionAsPaid("1","payment"));
+        assertThrows(TuitionConflictException.class, () -> service.releaseTuition("1","payment"));
+        verify(repository).claimTuition("1","payment");
+        verify(repository).completeTuition("1","payment");
+        verify(repository).releaseTuition("1","payment");
         verifyNoMoreInteractions(repository);
     }
 }

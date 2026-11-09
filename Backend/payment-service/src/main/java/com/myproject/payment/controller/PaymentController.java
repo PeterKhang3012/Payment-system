@@ -42,7 +42,8 @@ public class PaymentController {
         }
 
         if (paymentRequest.getStudentId() == null
-                || paymentRequest.getStudentId() <= 0) {
+                || !paymentRequest.getStudentId().matches("[0-9]*[1-9][0-9]*")
+                || paymentRequest.getStudentId().length() > 20) {
             throw new BadRequestException("Invalid studentId");
         }
 

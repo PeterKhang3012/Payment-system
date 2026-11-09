@@ -13,7 +13,7 @@ if (!privateKeyPath) {
 const privateKey = fs.readFileSync(privateKeyPath, "utf8");
 //login
 const login = async (username, password) => {
-  const user = await Auth.findOne({ username });
+  const user = await Auth.findOne({ username: username.trim() });
 
   if (!user) {
     // API error handling: preserve credential rejection with an explicit exception type.

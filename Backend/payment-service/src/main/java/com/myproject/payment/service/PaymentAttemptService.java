@@ -47,7 +47,7 @@ public class PaymentAttemptService {
     public void saveAttempt(
             String paymentId,
             String userId,
-            Long studentId,
+            String studentId,
             BigDecimal amount) {
         String activeKey = ACTIVE_PREFIX + userId;
         String attemptKey = KEY_PREFIX + paymentId;
