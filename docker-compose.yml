@@ -28,6 +28,9 @@ services:
     image: mongo:8
     container_name: mongodb
     restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
     ports:
       - "27017:27017"
     volumes:
@@ -157,7 +160,8 @@ services:
     volumes:
       - ./keys:/app/keys:ro
     environment:
-      MONGO_URL: ${MONGO_URL}
+      MONGO_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGO_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
       JWT_PRIVATE_KEY_PATH: ${JWT_PRIVATE_KEY_PATH}
     networks:
       - payment-network

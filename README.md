@@ -1,8 +1,9 @@
-- nhóm: SOA.26-20.
-- Repository: [PeterKhang3012/Payment-system](https://github.com/PeterKhang3012/Payment-system).
-# KDNPay – Payment System
+`Group:` SOA.26-20.
 
-KDNPay là hệ thống thanh toán học phí đại học theo kiến trúc microservices. Người dùng đăng nhập, xem hồ sơ và số dư ví, tra cứu học phí theo mã sinh viên, xác nhận bằng OTP qua email và xem lịch sử thanh toán. Dự án minh họa việc phối hợp nhiều dịch vụ và cơ sở dữ liệu trong một quy trình thanh toán, có kiểm tra đồng thời và chống khấu trừ trùng.
+`Repository:` [PeterKhang3012/Payment-system](https://github.com/PeterKhang3012/Payment-system).
+# Payment System
+
+payment system là hệ thống thanh toán học phí đại học theo kiến trúc microservices. Người dùng đăng nhập, xem hồ sơ và số dư ví, tra cứu học phí theo mã sinh viên, xác nhận bằng OTP qua email và xem lịch sử thanh toán. Dự án minh họa việc phối hợp nhiều dịch vụ và cơ sở dữ liệu trong một quy trình thanh toán, có kiểm tra đồng thời và chống khấu trừ trùng.
 
 ## Mục lục
 
@@ -46,13 +47,13 @@ KDNPay là hệ thống thanh toán học phí đại học theo kiến trúc mi
 
 ### 2.1.1. Phạm vi hệ thống
 
-Hệ thống KDNPay mô hình hóa các chức năng đã được triển khai trong Frontend và Backend, bao gồm các nghiệp vụ liên quan đến xác thực người dùng, quản lý thông tin tài khoản, tra cứu học phí và thanh toán học phí.
+Hệ thống payment mô hình hóa các chức năng đã được triển khai trong Frontend và Backend, bao gồm các nghiệp vụ liên quan đến xác thực người dùng, quản lý thông tin tài khoản, tra cứu học phí và thanh toán học phí.
 
 ### 2.1.2. Bối cảnh và mục tiêu
 
 Hệ thống tổ chức quy trình thanh toán học phí thành hai giai đoạn chính:
 
-1. **Khởi tạo yêu cầu thanh toán:** Người dùng cung cấp mã sinh viên cần thanh toán. Hệ thống kiểm tra các điều kiện thanh toán, tạo mã giao dịch (`paymentId`), lưu thông tin yêu cầu và gửi mã OTP đến email của người nộp tiền.
+1. **Khởi tạo yêu cầu thanh toán:** Người dùng cung cấp mã sinh viên cần thanh toán. Hệ thống kiểm tra các điều kiện thanh toán, tạo mã giao dịch `paymentId`), lưu thông tin yêu cầu và gửi mã OTP đến email của người nộp tiền.
 2. **Xác nhận thanh toán:** Người dùng nhập mã OTP để xác nhận giao dịch. Sau khi OTP hợp lệ, hệ thống thực hiện khấu trừ số dư, cập nhật trạng thái học phí, ghi nhận lịch sử giao dịch và gửi email thông báo thanh toán thành công.
 
 Người nộp tiền được xác định thông qua tài khoản đang đăng nhập, trong khi sinh viên được thanh toán được xác định bằng mã sinh viên dùng để tra cứu học phí. Hai đối tượng này không nhất thiết phải là cùng một người.
@@ -84,7 +85,6 @@ Người nộp tiền được xác định thông qua tài khoản đang đăng
 
 ## 3. ERD
 
-
 `2a. Thuộc tính và liên kết logic suy ra từ entity/seed; các đường nét đứt không phải FOREIGN KEY vật lý.`
 
 ```mermaid
@@ -96,7 +96,7 @@ config:
     useMaxWidth: false
 ---
 flowchart TB
-    Auth["<b>Auth (collection auths)</b><br/>MongoDB / payment_system<br/><br/>Khóa&nbsp;│&nbsp;Tên&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Data type<br/>─────┼──────────┼────────────<br/>PK&nbsp;&nbsp;&nbsp;│&nbsp;_id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;ObjectId<br/>UQ&nbsp;&nbsp;&nbsp;│&nbsp;userId&nbsp;&nbsp;&nbsp;│&nbsp;ObjectId<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;username&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;password&nbsp;│&nbsp;bcrypt hash"]
+    Auth["<b>Auth (collection auths)</b><br/>MongoDB / payment_system<br/><br/>Khóa&nbsp;│&nbsp;Tên&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Data type<br/>─────┼──────────┼────────────<br/>PK&nbsp;&nbsp;&nbsp;│&nbsp;_id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;ObjectId<br/>UQ&nbsp;&nbsp;&nbsp;│&nbsp;userId&nbsp;&nbsp;&nbsp;│&nbsp;ObjectId<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;username&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;password&nbsp;│&nbsp;String "]
 
     User["<b>User (users)</b><br/>SQL Server / UserDB<br/><br/>Khóa&nbsp;│&nbsp;Tên&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Data type<br/>─────┼──────────────┼──────────<br/>PK&nbsp;&nbsp;&nbsp;│&nbsp;id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;Long<br/>UQ&nbsp;&nbsp;&nbsp;│&nbsp;student_id&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>UQ&nbsp;&nbsp;&nbsp;│&nbsp;user_id&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;full_name&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;email&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;String<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;phone_number&nbsp;│&nbsp;String?<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;│&nbsp;created_at&nbsp;&nbsp;&nbsp;│&nbsp;DateTime"]
 
