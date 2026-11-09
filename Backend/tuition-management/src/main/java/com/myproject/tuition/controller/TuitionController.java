@@ -37,7 +37,7 @@ public class TuitionController {
     public TuitionResponse getTuitionByStudentId(
             @PathVariable @NotBlank(message = "Student ID is required")
             @jakarta.validation.constraints.Size(max = 20)
-            @jakarta.validation.constraints.Pattern(regexp = "[0-9]*[1-9][0-9]*", message = "Student ID must contain digits and be positive")
+            @jakarta.validation.constraints.Pattern(regexp = "[A-Za-z0-9]+", message = "Student ID must contain only letters and digits")
             String studentId) {
 
         return tuitionService.getTuitionByStudentId(studentId);
@@ -48,7 +48,7 @@ public class TuitionController {
     public ResponseEntity<Void> claimTuition(
             @PathVariable @NotBlank(message = "Student ID is required")
             @jakarta.validation.constraints.Size(max = 20)
-            @jakarta.validation.constraints.Pattern(regexp = "[0-9]*[1-9][0-9]*", message = "Student ID must contain digits and be positive")
+            @jakarta.validation.constraints.Pattern(regexp = "[A-Za-z0-9]+", message = "Student ID must contain only letters and digits")
             String studentId,
             @RequestParam @NotBlank(message = "Payment ID is required")
             // API validation: match the existing database string capacity.
@@ -63,7 +63,7 @@ public class TuitionController {
     public ResponseEntity<Void> markTuitionAsPaid(
             @PathVariable @NotBlank(message = "Student ID is required")
             @jakarta.validation.constraints.Size(max = 20)
-            @jakarta.validation.constraints.Pattern(regexp = "[0-9]*[1-9][0-9]*", message = "Student ID must contain digits and be positive")
+            @jakarta.validation.constraints.Pattern(regexp = "[A-Za-z0-9]+", message = "Student ID must contain only letters and digits")
             String studentId,
             @RequestParam  @NotBlank(message = "Payment ID is required")
             // API validation: match the existing database string capacity.
@@ -78,7 +78,7 @@ public class TuitionController {
     public ResponseEntity<Void> releaseTuition(
             @PathVariable @NotBlank(message = "Student ID is required")
             @jakarta.validation.constraints.Size(max = 20)
-            @jakarta.validation.constraints.Pattern(regexp = "[0-9]*[1-9][0-9]*", message = "Student ID must contain digits and be positive")
+            @jakarta.validation.constraints.Pattern(regexp = "[A-Za-z0-9]+", message = "Student ID must contain only letters and digits")
             String studentId,
             @RequestParam @NotBlank(message = "Payment ID is required")
             // API validation: match the existing database string capacity.

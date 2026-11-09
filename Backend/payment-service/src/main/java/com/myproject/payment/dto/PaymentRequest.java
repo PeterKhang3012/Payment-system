@@ -9,7 +9,7 @@ public class PaymentRequest {
     // API validation: reject missing or nonpositive IDs before side effects.
     @NotBlank(message = "studentId is required")
     @Size(max = 20, message = "studentId must not exceed 20 characters")
-    @Pattern(regexp = "[0-9]*[1-9][0-9]*", message = "studentId must contain digits and be positive")
+    @Pattern(regexp = "[A-Za-z0-9]+", message = "studentId must contain only letters and digits")
     private String studentId;
 
     // API validation: missing/null terms resolve to false and are rejected by the existing controller check.

@@ -659,22 +659,6 @@ input::placeholder {
     color: #dc6217
 }
 
-.tip {
-    padding: 18px;
-    color: #8c969f;
-    font-size: 12px
-}
-
-.tip svg {
-    color: #d98548
-}
-
-.tip h3 {
-    font-size: 13px;
-    color: #66717d;
-    margin-top: 12px
-}
-
 .timer {
     display: flex;
     align-items: center;
@@ -822,11 +806,6 @@ footer {
         grid-template-columns: 1fr
     }
 
-    .payment-grid>aside {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px
-    }
 
 
 }
@@ -934,9 +913,6 @@ footer {
         padding: 12px 8px
     }
 
-    .payment-grid>aside {
-        display: block
-    }
 
     .filters {
         display: block

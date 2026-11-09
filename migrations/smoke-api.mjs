@@ -31,15 +31,15 @@ await expect('http://localhost:3006/api/users/me',{headers},200);
 await expect('http://localhost:3006/api/users/me',{},401);
 const tuition = await (await expect('http://localhost:3002/api/tuitions/%20100001%20',{headers},200)).json();
 assert.equal(tuition.studentId,'100001'); checks++;
-for (const id of ['0','000','abc','123456789012345678901']) {
+for (const id of ['-1','1.5','SV!01','123456789012345678901']) {
   await expect(`http://localhost:3002/api/tuitions/${id}`,{headers},400);
 }
-for (const id of [100001,' ','000','abc','123456789012345678901']) {
+for (const id of [100001,' ','-1','SV!01','123456789012345678901']) {
   const options = json({studentId:id,acceptedTerms:true}); options.headers = {...options.headers,...headers};
   await expect('http://localhost:8080/api/payments/request-otp',options,400);
 }
 // A missing tuition and an already-paid tuition fail before attempts/OTP generation.
-for (const [studentId,status] of [['99999999999999999999',404],['100004',409]]) {
+for (const [studentId,status] of [['99999999999999999999',404],['SVUnknown001',404],['100004',409]]) {
   const options=json({studentId,acceptedTerms:true}); options.headers={...options.headers,...headers};
   await expect('http://localhost:8080/api/payments/request-otp',options,status);
 }

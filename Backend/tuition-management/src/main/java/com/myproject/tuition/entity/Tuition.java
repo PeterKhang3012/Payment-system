@@ -21,7 +21,7 @@ public class Tuition {
     @org.hibernate.annotations.Nationalized
     @jakarta.validation.constraints.NotBlank
     @jakarta.validation.constraints.Size(max = 20)
-    @jakarta.validation.constraints.Pattern(regexp = "[0-9]*[1-9][0-9]*")
+    @jakarta.validation.constraints.Pattern(regexp = "[A-Za-z0-9]+")
     private String studentId;
 
     @Column(name = "student_name", nullable = false)

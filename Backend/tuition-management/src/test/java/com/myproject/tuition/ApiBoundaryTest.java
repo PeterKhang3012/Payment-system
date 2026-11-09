@@ -28,7 +28,7 @@ class ApiBoundaryTest {
     }
 
     @Test void invalidInputHasNoSideEffects() throws Exception {
-        mvc.perform(put("/api/tuitions/0/claim").header("Authorization", "Bearer test")
+        mvc.perform(put("/api/tuitions/invalid!/claim").header("Authorization", "Bearer test")
             .header("Idempotency-Key", "test").param("paymentId", "test")
             .contentType(MediaType.APPLICATION_JSON).content(""))
             .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").exists());
@@ -51,8 +51,21 @@ class ApiBoundaryTest {
             .andExpect(status().isOk());
         verify(service).claimTuition("001", "test");
     }
+    @Test void alphanumericIdsPreserveAllOperations() throws Exception {
+        for (String id : new String[]{"SV001", "aB01", "000", "0", "ABC", "AB123456789012345678"}) {
+            mvc.perform(get("/api/tuitions/{studentId}", " " + id + " ")).andExpect(status().isOk());
+            verify(service).getTuitionByStudentId(id);
+            for (String operation : new String[]{"claim", "paid", "release"}) {
+                mvc.perform(put("/api/tuitions/{studentId}/" + operation, id).param("paymentId", "test"))
+                    .andExpect(status().isOk());
+            }
+            verify(service).claimTuition(id, "test");
+            verify(service).markTuitionAsPaid(id, "test");
+            verify(service).releaseTuition(id, "test");
+        }
+    }
     @Test void invalidStringIdsDoNotReachService() throws Exception {
-        for (String id : new String[]{" ", "000", "-1", "1.5", "1x", "123456789012345678901"}) {
+        for (String id : new String[]{" ", "-1", "1.5", "SV!01", "SV 01", "123456789012345678901"}) {
             mvc.perform(get("/api/tuitions/{studentId}", id)).andExpect(status().isBadRequest());
         }
         verifyNoInteractions(service);

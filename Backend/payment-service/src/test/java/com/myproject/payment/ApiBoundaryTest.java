@@ -31,7 +31,7 @@ class ApiBoundaryTest {
     @Test void invalidInputHasNoSideEffects() throws Exception {
         mvc.perform(post("/api/payments/request-otp").header("Authorization", "Bearer test")
             .header("Idempotency-Key", "test").param("paymentId", "test")
-            .contentType(MediaType.APPLICATION_JSON).content("{\"studentId\":0,\"acceptedTerms\":true}"))
+            .contentType(MediaType.APPLICATION_JSON).content("{\"studentId\":\"SV!01\",\"acceptedTerms\":true}"))
             .andExpect(status().isBadRequest()).andExpect(jsonPath("$.message").exists());
         verifyNoInteractions(service);
     }
@@ -41,7 +41,7 @@ class ApiBoundaryTest {
         verifyNoInteractions(service);
     }
     @Test void invalidStringStudentIdsHaveNoSideEffects() throws Exception {
-        for (String id : new String[]{"", " ", "0", "000", "-1", "1.5", "SV001", "123456789012345678901"}) {
+        for (String id : new String[]{"", " ", "-1", "1.5", "SV!01", "SV 01", "123456789012345678901"}) {
             mvc.perform(post("/api/payments/request-otp").header("Authorization", "Bearer test")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"studentId\":\"" + id + "\",\"acceptedTerms\":true}"))
@@ -57,6 +57,17 @@ class ApiBoundaryTest {
             .content("{\"studentId\":\" 001 \",\"acceptedTerms\":true}"))
             .andExpect(status().isOk());
         verify(service).requestOtp("user-1", "001", true, "Bearer test", "student@example.com");
+    }
+    @Test void alphanumericStudentIdsReachOtpRequestUnchanged() throws Exception {
+        when(userClient.getCurrentUser("Bearer test")).thenReturn(
+            new com.myproject.payment.dto.UserDtos.UserResponse(null, "user-1", "Student", "student@example.com", null, null));
+        for (String id : new String[]{"SV001", "aB01", "000", "0", "ABC", "AB123456789012345678"}) {
+            mvc.perform(post("/api/payments/request-otp").header("Authorization", "Bearer test")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"studentId\":\" " + id + " \",\"acceptedTerms\":true}"))
+                .andExpect(status().isOk());
+            verify(service).requestOtp("user-1", id, true, "Bearer test", "student@example.com");
+        }
     }
     @Test void invalidOtpHasNoSideEffects() throws Exception {
         for (String body : new String[]{"{}","null","[]","{\"paymentId\":\"bad\",\"code\":\"123456\"}",
